@@ -54,6 +54,22 @@ class Line:
             else:
                 return 'y = {}x'.format(self.slope)
 
+    def solve(self, anotherLine):
+        if not isinstance(anotherLine, Line):
+            raise Exception('Bad Input!')
 
+        if self.slope == anotherLine.slope:
+            return None
+        elif anotherLine.slope == 'Infinity':
+            x = anotherLine.pointA.x
+            y = round(self.slope * x + self.constant, 5)
+        elif self.slope == 'Infinity':
+            x = self.pointA.x
+            y = round(anotherLine.slope * x + anotherLine.constant, 5)
+        else:
+            x = round((anotherLine.constant - self.constant) / (self.slope - anotherLine.slope), 5)
+            y = round((anotherLine.slope * self.constant - self.slope * anotherLine.constant) / (anotherLine.slope - self.slope), 5)
+
+        return Point(x, y)
 
 

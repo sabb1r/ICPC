@@ -87,6 +87,11 @@ class Line:
 
 
 def shortest_distance(p, ab):
+    """
+    :param p: a Point object
+    :param ab: a Line object
+    :return: shortest distance i.e. perpendicular distance of the line from the point
+    """
     if not isinstance(p, Point) or not isinstance(ab, Line):
         raise Exception('Bad input!')
 

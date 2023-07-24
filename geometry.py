@@ -68,8 +68,19 @@ class Line:
             y = round(anotherLine.slope * x + anotherLine.constant, 5)
         else:
             x = round((anotherLine.constant - self.constant) / (self.slope - anotherLine.slope), 5)
-            y = round((anotherLine.slope * self.constant - self.slope * anotherLine.constant) / (anotherLine.slope - self.slope), 5)
+            y = round((anotherLine.slope * self.constant - self.slope * anotherLine.constant) / (
+                        anotherLine.slope - self.slope), 5)
 
         return Point(x, y)
 
+    def distance(self, anotherLine):
+        if not isinstance(anotherLine, Line):
+            raise Exception('Bad Input!')
 
+        if self.slope == anotherLine.slope:
+            if self.slope == 'Infinity':
+                return round(abs(anotherLine.pointA.x - self.pointA.x), 5)
+            else:
+                return round(abs(anotherLine.constant - self.constant), 5)
+        else:
+            return None

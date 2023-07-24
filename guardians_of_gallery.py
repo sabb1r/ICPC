@@ -21,8 +21,20 @@ def draw_boundary():
     plt.plot(abscissa, ordinate, 'r')
 
 
-def find_barrier_edges(pointA, pointB):
-    lineAB = Line(pointA, pointB)
+def find_barrier_vertices(pointA, pointB):
+    barrier_vertices = []
+    line_ab = Line(pointA, pointB)
+    for edge in boundary:
+        intersecting_point = line_ab.solve(edge)
+        if intersecting_point is None:
+            continue
+        else:
+            if not intersecting_point.is_between(edge.pointA, edge.pointB):
+                continue
+            else:
+                barrier_vertices.append(intersecting_point)
+
+    return barrier_vertices
 
 
 # --- Input Taking Section --- #

@@ -12,6 +12,19 @@ class Point:
         else:
             raise Exception('Bad Input!')
 
+    def is_between(self, point1, point2):
+        """
+        :param point1: a Point object
+        :param point2: a Point object
+        :return: True if calling point is in between point1 and point2, False otherwise
+        """
+        distance1 = self.distance(point1)
+        distance2 = self.distance(point2)
+
+        if distance1 + distance2 == point1.distance(point2):
+            return True
+        else:
+            return False
 
 class Line:
     def __init__(self, *args, slope=None):

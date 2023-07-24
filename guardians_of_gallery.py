@@ -4,11 +4,14 @@ from matplotlib import pyplot as plt
 
 
 def create_boundary():
+    boundary = []
     for i in range(len(vertices) - 1):
         edge = Line(vertices[i], vertices[i + 1])
         boundary.append(edge)
 
     boundary.append(Line(vertices[i], vertices[0]))
+
+    return boundary
 
 
 def draw_boundary():
@@ -51,7 +54,11 @@ with open(os.path.abspath(file_path), 'r') as file:
     guardPoint = Point(*[int(x) for x in file.readline().strip().split()])
     statuePoint = Point(*[int(x) for x in file.readline().strip().split()])
 
-boundary = []
+
+boundary = create_boundary()
+barrier_points = find_barrier_vertices(guardPoint, statuePoint)
+if not barrier_points:
+    print('VOILA!!!')
 
 # --- Plotting Section --- #
 plt.plot(guardPoint.x, guardPoint.y, 'ob')

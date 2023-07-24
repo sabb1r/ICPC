@@ -41,5 +41,19 @@ class Line:
         else:
             self.constant = round(self.pointA.y - self.slope * self.pointA.x, 5)
 
+    def __repr__(self):
+        if self.slope == 'Infinity':
+            return 'x = {}'.format(self.pointA.x)
+        elif self.slope == 0:
+            return 'y = {}'.format(self.pointA.y)
+        else:
+            if self.constant > 0:
+                return 'y = {}x + {}'.format(self.slope, self.constant)
+            elif self.constant < 0:
+                return 'y = {}x - {}'.format(self.slope, abs(self.constant))
+            else:
+                return 'y = {}x'.format(self.slope)
+
+
 
 

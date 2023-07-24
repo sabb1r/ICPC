@@ -46,6 +46,13 @@ class Line:
             return 'x = {}'.format(self.pointA.x)
         elif self.slope == 0:
             return 'y = {}'.format(self.pointA.y)
+        elif abs(self.slope) == 1:
+            if self.constant > 0:
+                return 'y = x + {}'.format(self.constant) if self.slope == 1 else 'y = -x + {}'.format(self.constant)
+            elif self.constant < 0:
+                return 'y = x - {}'.format(abs(self.constant)) if self.slope == 1 else 'y = -x - {}'.format(self.constant)
+            else:
+                return 'y = x' if self.slope == 1 else 'y = -x'
         else:
             if self.constant > 0:
                 return 'y = {}x + {}'.format(self.slope, self.constant)

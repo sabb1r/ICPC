@@ -69,7 +69,7 @@ class Line:
         else:
             x = round((anotherLine.constant - self.constant) / (self.slope - anotherLine.slope), 5)
             y = round((anotherLine.slope * self.constant - self.slope * anotherLine.constant) / (
-                        anotherLine.slope - self.slope), 5)
+                    anotherLine.slope - self.slope), 5)
 
         return Point(x, y)
 
@@ -84,3 +84,15 @@ class Line:
                 return round(abs(anotherLine.constant - self.constant), 5)
         else:
             return None
+
+
+def shortest_distance(p, ab):
+    if not isinstance(p, Point) or not isinstance(ab, Line):
+        raise Exception('Bad input!')
+
+    if ab.slope == 'Infinity':
+        return round(abs(ab.pointA.x - p.x), 5)
+    elif ab.slope == 0:
+        return round(abs(ab.pointA.y - p.y), 5)
+    else:
+        return round(abs(ab.slope * p.x - p.y + ab.constant) / pow(ab.slope ** 2 + 1, 1/2), 5)

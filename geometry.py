@@ -10,4 +10,4 @@ class Point:
         if isinstance(anotherPoint, Point):
             return round(pow((self.x - anotherPoint.x) ** 2 + (self.y - anotherPoint.y) ** 2, 1/2), 5)
         else:
-            raise print('Distance can only be calculated between two points!')
+            raise print('Bad Input!')

@@ -26,6 +26,7 @@ class Point:
         else:
             return False
 
+
 class Line:
     def __init__(self, *args, slope=None):
         if len(args) == 2 and slope is None:
@@ -63,7 +64,8 @@ class Line:
             if self.constant > 0:
                 return 'y = x + {}'.format(self.constant) if self.slope == 1 else 'y = -x + {}'.format(self.constant)
             elif self.constant < 0:
-                return 'y = x - {}'.format(abs(self.constant)) if self.slope == 1 else 'y = -x - {}'.format(self.constant)
+                return 'y = x - {}'.format(abs(self.constant)) if self.slope == 1 else 'y = -x - {}'.format(
+                    self.constant)
             else:
                 return 'y = x' if self.slope == 1 else 'y = -x'
         else:
@@ -120,4 +122,4 @@ def shortest_distance(p, ab):
     elif ab.slope == 0:
         return round(abs(ab.pointA.y - p.y), 5)
     else:
-        return round(abs(ab.slope * p.x - p.y + ab.constant) / pow(ab.slope ** 2 + 1, 1/2), 5)
+        return round(abs(ab.slope * p.x - p.y + ab.constant) / pow(ab.slope ** 2 + 1, 1 / 2), 5)

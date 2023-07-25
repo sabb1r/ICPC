@@ -29,12 +29,11 @@ def find_barrier_vertices(pointA, pointB):
     line_ab = Line(pointA, pointB)
     for edge in boundary:
         intersecting_point = line_ab.solve(edge)
+        print(intersecting_point)
         if intersecting_point is None:
             continue
         else:
-            if not intersecting_point.is_between(edge.pointA, edge.pointB):
-                continue
-            else:
+            if intersecting_point.is_between(edge.pointA, edge.pointB) and intersecting_point.is_between(line_ab.pointA, line_ab.pointB):
                 barrier_vertices.append(intersecting_point)
 
     return barrier_vertices
@@ -59,6 +58,9 @@ boundary = create_boundary()
 barrier_points = find_barrier_vertices(guardPoint, statuePoint)
 if not barrier_points:
     print('VOILA!!!')
+else:
+    for dot in barrier_points:
+        plt.plot(dot.x, dot.y, 'ok')
 
 # --- Plotting Section --- #
 plt.plot(guardPoint.x, guardPoint.y, 'ob')

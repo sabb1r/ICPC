@@ -41,9 +41,9 @@ def find_barrier_vertices(pointA, pointB):
 
 
 # --- Input Taking Section --- #
-file_path = os.getcwd() + '\\input.txt'  # Assuming the input file is put in the working directory as a name
+file_path = os.path.join(os.getcwd(), 'input.txt') # Assuming the input file is put in the working directory as a name
 # "input.txt"
-with open(os.path.abspath(file_path), 'r') as file:
+with open(file_path, 'r') as file:
     no_vertex = int(file.readline().strip())
 
     vertices = []

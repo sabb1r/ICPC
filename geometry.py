@@ -49,7 +49,7 @@ class Line:
         else:
             raise Exception('Bad Input!')
 
-        if slope == 'Infinity':
+        if self.slope == 'Infinity':
             self.constant = None
         else:
             self.constant = round(self.pointA.y - self.slope * self.pointA.x, 5)

@@ -25,22 +25,35 @@ def draw_boundary():
     plt.plot(abscissa, ordinate, 'r')
 
 
-def find_barrier_vertices(pointA, pointB):
-    barrier_vertices = []
+def find_barrier_edges(pointA, pointB):
+    barrier_edges = []
     line_ab = Line(pointA, pointB)
     for edge in boundary:
         intersecting_point = line_ab.solve(edge)
         if intersecting_point is None:
             continue
         else:
-            if intersecting_point.is_between(edge.pointA, edge.pointB) and intersecting_point.is_between(line_ab.pointA, line_ab.pointB):
-                barrier_vertices.append(intersecting_point)
+            if intersecting_point.is_between(edge.pointA, edge.pointB) and intersecting_point.is_between(line_ab.pointA,
+                                                                                                         line_ab.pointB):
+                barrier_edges.append(edge)
+
+    return barrier_edges
+
+
+def find_barrier_vertices(barrier_lines):
+    barrier_vertices = []
+
+    for ind, line in enumerate(barrier_lines):
+        if ind % 2 == 0:
+            barrier_vertices.append(line.pointB)
+        else:
+            barrier_vertices.append(line.pointA)
 
     return barrier_vertices
 
 
 # --- Input Taking Section --- #
-file_path = os.path.join(os.getcwd(), 'input.txt') # Assuming the input file is put in the working directory as a name
+file_path = os.path.join(os.getcwd(), 'input.txt')  # Assuming the input file is put in the working directory as a name
 # "input.txt"
 with open(file_path, 'r') as file:
     no_vertex = int(file.readline().strip())
@@ -53,14 +66,14 @@ with open(file_path, 'r') as file:
     guardPoint = Point(*[int(x) for x in file.readline().strip().split()])
     statuePoint = Point(*[int(x) for x in file.readline().strip().split()])
 
-
 boundary = create_boundary()
-barrier_points = find_barrier_vertices(guardPoint, statuePoint)
-if not barrier_points:
+barrier_edges = find_barrier_edges(guardPoint, statuePoint)
+if not barrier_edges:
     print('VOILA!!!')
 else:
-    for dot in barrier_points:
-        plt.plot(dot.x, dot.y, 'ok')
+    barrier_vertices = find_barrier_vertices(barrier_edges)
+    for p in barrier_vertices:
+        plt.plot(p.x, p.y, 'ok')
 
 # --- Plotting Section --- #
 plt.plot(guardPoint.x, guardPoint.y, 'ob')

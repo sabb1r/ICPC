@@ -32,6 +32,8 @@ def find_barrier_edges(pointA, pointB):
         intersecting_point = line_ab.solve(edge)
         if intersecting_point is None:
             continue
+        elif intersecting_point in [edge.pointA, edge.pointB, pointA, pointB]:
+            continue
         else:
             if intersecting_point.is_between(edge.pointA, edge.pointB) and intersecting_point.is_between(line_ab.pointA,
                                                                                                          line_ab.pointB):
@@ -55,14 +57,16 @@ def find_barrier_vertices(barrier_lines):
 def create_sight_line():
     for point in barrier_vertices:
         crossings = find_barrier_edges(point, statuePoint)
-        if len(crossings) == 2:
+        print(crossings)
+        if len(crossings) == 0:
             line = Line(point, statuePoint)
             break
 
     for edge in boundary:
         intersecting_point = edge.solve(line)
-        print(edge, intersecting_point)
-        if intersecting_point.is_between(edge.pointA, edge.pointB) and not intersecting_point.is_between(line.pointA, line.pointB) and intersecting_point.distance(
+        if intersecting_point is None:
+            continue
+        elif intersecting_point.is_between(edge.pointA, edge.pointB) and not intersecting_point.is_between(line.pointA, line.pointB) and intersecting_point.distance(
                 line.pointA) < intersecting_point.distance(line.pointB):
             return Line(intersecting_point, statuePoint)
 
@@ -75,23 +79,49 @@ with open(file_path, 'r') as file:
 
     vertices = []
     for i in range(no_vertex):
-        vertex = Point(*[int(x) for x in file.readline().strip().split()])
+        vertex = Point(*[float(x) for x in file.readline().strip().split()])
         vertices.append(vertex)
 
-    guardPoint = Point(*[int(x) for x in file.readline().strip().split()])
-    statuePoint = Point(*[int(x) for x in file.readline().strip().split()])
+    guardPoint = Point(*[float(x) for x in file.readline().strip().split()])
+    statuePoint = Point(*[float(x) for x in file.readline().strip().split()])
 
 boundary = create_boundary()
 barrier_edges = find_barrier_edges(guardPoint, statuePoint)
+
 if not barrier_edges:
     print('VOILA!!!')
 else:
     barrier_vertices = find_barrier_vertices(barrier_edges)
-    for p in barrier_vertices:
-        plt.plot(p.x, p.y, 'ok')
+    print(barrier_vertices)
+    # for p in barrier_vertices:
+    #     plt.plot(p.x, p.y, 'ok')
 
     sightLine = create_sight_line()
     plt.plot([sightLine.pointA.x, sightLine.pointB.x], [sightLine.pointA.y, sightLine.pointB.y], '--c')
+
+    pivot_point = guardPoint
+    while barrier_vertices:
+        if sightLine.slope == 0:
+            perpendicularLine = Line(pivot_point, slope='Infinity')
+        elif sightLine.slope == 'Infinity':
+            perpendicularLine = Line(pivot_point, slope=0)
+        else:
+            perpendicularLine = Line(pivot_point, slope=-1/sightLine.slope)
+
+        perpendicularPoint = perpendicularLine.solve(sightLine)
+        print(perpendicularPoint)
+        plt.plot(perpendicularPoint.x, perpendicularPoint.y, 'oy')
+        if not perpendicularPoint.is_between(sightLine.pointA, sightLine.pointB) or find_barrier_edges(pivot_point, perpendicularPoint):
+            plt.plot([pivot_point.x, barrier_vertices[0].x], [pivot_point.y, barrier_vertices[0].y], '--g')
+            pivot_point = barrier_vertices.pop(0)
+        else:
+            print('VOILA')
+            print('Found the sight line from the point', pivot_point, 'to the point', perpendicularPoint)
+            plt.plot([pivot_point.x, perpendicularPoint.x], [pivot_point.y, perpendicularPoint.y], '--g')
+            print('point to point distance', pivot_point.distance(perpendicularPoint))
+            print('shortest distance', shortest_distance(pivot_point, sightLine))
+            break
+
 
 # --- Plotting Section --- #
 plt.plot(guardPoint.x, guardPoint.y, 'ob')

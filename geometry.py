@@ -6,6 +6,12 @@ class Point:
     def __repr__(self):
         return '({}, {})'.format(self.x, self.y)
 
+    def __eq__(self, other):
+        if round(self.x, 5) == round(other.x, 5) and round(self.y, 5) == round(other.y, 5):
+            return True
+        else:
+            return False
+
     def distance(self, anotherPoint):
         if isinstance(anotherPoint, Point):
             return pow((self.x - anotherPoint.x) ** 2 + (self.y - anotherPoint.y) ** 2, 1 / 2)
@@ -21,7 +27,9 @@ class Point:
         distance1 = self.distance(point1)
         distance2 = self.distance(point2)
 
-        if round(distance1 + distance2, 5) == round(point1.distance(point2), 5):
+        if any([x == 0 for x in (distance1, distance2)]):
+            return False
+        elif round(distance1 + distance2, 5) == round(point1.distance(point2), 5):
             return True
         else:
             return False

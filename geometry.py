@@ -8,7 +8,7 @@ class Point:
 
     def distance(self, anotherPoint):
         if isinstance(anotherPoint, Point):
-            return round(pow((self.x - anotherPoint.x) ** 2 + (self.y - anotherPoint.y) ** 2, 1 / 2), 5)
+            return pow((self.x - anotherPoint.x) ** 2 + (self.y - anotherPoint.y) ** 2, 1 / 2)
         else:
             raise Exception('Bad Input!')
 
@@ -34,7 +34,7 @@ class Line:
                 self.pointA = args[0]
                 self.pointB = args[1]
                 try:
-                    self.slope = round((self.pointB.y - self.pointA.y) / (self.pointB.x - self.pointA.x), 5)
+                    self.slope = (self.pointB.y - self.pointA.y) / (self.pointB.x - self.pointA.x)
                 except ZeroDivisionError:
                     self.slope = 'Infinity'
             else:
@@ -53,7 +53,7 @@ class Line:
         if self.slope == 'Infinity':
             self.constant = None
         else:
-            self.constant = round(self.pointA.y - self.slope * self.pointA.x, 5)
+            self.constant = self.pointA.y - self.slope * self.pointA.x
 
     def __repr__(self):
         if self.slope == 'Infinity':
@@ -62,19 +62,18 @@ class Line:
             return 'y = {}'.format(self.pointA.y)
         elif abs(self.slope) == 1:
             if self.constant > 0:
-                return 'y = x + {}'.format(self.constant) if self.slope == 1 else 'y = -x + {}'.format(self.constant)
+                return 'y = x + {}'.format(round(self.constant, 2)) if self.slope == 1 else 'y = -x + {}'.format(round(self.constant, 2))
             elif self.constant < 0:
-                return 'y = x - {}'.format(abs(self.constant)) if self.slope == 1 else 'y = -x - {}'.format(
-                    self.constant)
+                return 'y = x - {}'.format(round(abs(self.constant), 2)) if self.slope == 1 else 'y = -x - {}'.format(round(self.constant, 2))
             else:
                 return 'y = x' if self.slope == 1 else 'y = -x'
         else:
             if self.constant > 0:
-                return 'y = {}x + {}'.format(self.slope, self.constant)
+                return 'y = {}x + {}'.format(round(self.slope, 2), round(self.constant, 2))
             elif self.constant < 0:
-                return 'y = {}x - {}'.format(self.slope, abs(self.constant))
+                return 'y = {}x - {}'.format(round(self.slope, 2), round(abs(self.constant), 2))
             else:
-                return 'y = {}x'.format(self.slope)
+                return 'y = {}x'.format(round(self.slope, 2))
 
     def solve(self, anotherLine):
         if not isinstance(anotherLine, Line):
@@ -84,14 +83,14 @@ class Line:
             return None
         elif anotherLine.slope == 'Infinity':
             x = anotherLine.pointA.x
-            y = round(self.slope * x + self.constant, 5)
+            y = self.slope * x + self.constant
         elif self.slope == 'Infinity':
             x = self.pointA.x
-            y = round(anotherLine.slope * x + anotherLine.constant, 5)
+            y = anotherLine.slope * x + anotherLine.constant
         else:
-            x = round((anotherLine.constant - self.constant) / (self.slope - anotherLine.slope), 5)
-            y = round((anotherLine.slope * self.constant - self.slope * anotherLine.constant) / (
-                    anotherLine.slope - self.slope), 5)
+            x = (anotherLine.constant - self.constant) / (self.slope - anotherLine.slope)
+            y = (anotherLine.slope * self.constant - self.slope * anotherLine.constant) / (
+                    anotherLine.slope - self.slope)
 
         return Point(x, y)
 
@@ -101,9 +100,9 @@ class Line:
 
         if self.slope == anotherLine.slope:
             if self.slope == 'Infinity':
-                return round(abs(anotherLine.pointA.x - self.pointA.x), 5)
+                return abs(anotherLine.pointA.x - self.pointA.x)
             else:
-                return round(abs(anotherLine.constant - self.constant), 5)
+                return abs(anotherLine.constant - self.constant)
         else:
             return None
 
@@ -118,8 +117,8 @@ def shortest_distance(p, ab):
         raise Exception('Bad input!')
 
     if ab.slope == 'Infinity':
-        return round(abs(ab.pointA.x - p.x), 5)
+        return abs(ab.pointA.x - p.x)
     elif ab.slope == 0:
-        return round(abs(ab.pointA.y - p.y), 5)
+        return abs(ab.pointA.y - p.y)
     else:
-        return round(abs(ab.slope * p.x - p.y + ab.constant) / pow(ab.slope ** 2 + 1, 1 / 2), 5)
+        return abs(ab.slope * p.x - p.y + ab.constant) / pow(ab.slope ** 2 + 1, 1 / 2)

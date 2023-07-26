@@ -9,6 +9,7 @@ def create_boundary():
         edge = Line(vertices[i], vertices[i + 1])
         boundary.append(edge)
 
+    i += 1
     boundary.append(Line(vertices[i], vertices[0]))
 
     return boundary
@@ -29,7 +30,6 @@ def find_barrier_vertices(pointA, pointB):
     line_ab = Line(pointA, pointB)
     for edge in boundary:
         intersecting_point = line_ab.solve(edge)
-        print(intersecting_point)
         if intersecting_point is None:
             continue
         else:

@@ -21,7 +21,7 @@ class Point:
         distance1 = self.distance(point1)
         distance2 = self.distance(point2)
 
-        if distance1 + distance2 == point1.distance(point2):
+        if round(distance1 + distance2, 5) == round(point1.distance(point2), 5):
             return True
         else:
             return False

@@ -56,7 +56,15 @@ def create_sight_line():
     for point in barrier_vertices:
         crossings = find_barrier_edges(point, statuePoint)
         if len(crossings) == 2:
-            return Line(point, statuePoint)
+            line = Line(point, statuePoint)
+            break
+
+    for edge in boundary:
+        intersecting_point = edge.solve(line)
+        print(edge, intersecting_point)
+        if intersecting_point.is_between(edge.pointA, edge.pointB) and not intersecting_point.is_between(line.pointA, line.pointB) and intersecting_point.distance(
+                line.pointA) < intersecting_point.distance(line.pointB):
+            return Line(intersecting_point, statuePoint)
 
 
 # --- Input Taking Section --- #
@@ -83,7 +91,7 @@ else:
         plt.plot(p.x, p.y, 'ok')
 
     sightLine = create_sight_line()
-    plt.plot([sightLine.pointA.x, sightLine.pointB.x], [sightLine.pointA.y, sightLine.pointB.y], '-c')
+    plt.plot([sightLine.pointA.x, sightLine.pointB.x], [sightLine.pointA.y, sightLine.pointB.y], '--c')
 
 # --- Plotting Section --- #
 plt.plot(guardPoint.x, guardPoint.y, 'ob')

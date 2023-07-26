@@ -52,6 +52,13 @@ def find_barrier_vertices(barrier_lines):
     return barrier_vertices
 
 
+def create_sight_line():
+    for point in barrier_vertices:
+        crossings = find_barrier_edges(point, statuePoint)
+        if len(crossings) == 2:
+            return Line(point, statuePoint)
+
+
 # --- Input Taking Section --- #
 file_path = os.path.join(os.getcwd(), 'input.txt')  # Assuming the input file is put in the working directory as a name
 # "input.txt"
@@ -74,6 +81,9 @@ else:
     barrier_vertices = find_barrier_vertices(barrier_edges)
     for p in barrier_vertices:
         plt.plot(p.x, p.y, 'ok')
+
+    sightLine = create_sight_line()
+    plt.plot([sightLine.pointA.x, sightLine.pointB.x], [sightLine.pointA.y, sightLine.pointB.y], '-c')
 
 # --- Plotting Section --- #
 plt.plot(guardPoint.x, guardPoint.y, 'ob')

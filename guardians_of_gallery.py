@@ -66,9 +66,22 @@ def create_sight_line():
         intersecting_point = edge.solve(line)
         if intersecting_point is None:
             continue
-        elif intersecting_point.is_between(edge.pointA, edge.pointB) and not intersecting_point.is_between(line.pointA, line.pointB) and intersecting_point.distance(
-                line.pointA) < intersecting_point.distance(line.pointB):
+        elif intersecting_point.is_between(edge.pointA, edge.pointB) and not intersecting_point.is_between(line.pointA,
+                                                                                                           line.pointB) and intersecting_point.distance(
+            line.pointA) < intersecting_point.distance(line.pointB):
             return Line(intersecting_point, statuePoint)
+
+
+def can_see_sightLine(pointX):
+    barrier_line1 = find_barrier_edges(pointX, sightLine.pointA)
+    barrier_line2 = find_barrier_edges(pointX, sightLine.pointB)
+
+    if not barrier_line1:
+        return True, sightLine.pointA
+    elif not barrier_line2:
+        return True, sightLine.pointB
+    else:
+        return False, None
 
 
 # --- Input Taking Section --- #
@@ -109,15 +122,23 @@ else:
         elif sightLine.slope == 'Infinity':
             perpendicularLine = Line(pivot_point, slope=0)
         else:
-            perpendicularLine = Line(pivot_point, slope=-1/sightLine.slope)
+            perpendicularLine = Line(pivot_point, slope=-1 / sightLine.slope)
 
         perpendicularPoint = perpendicularLine.solve(sightLine)
         # print(perpendicularPoint)
         # plt.plot(perpendicularPoint.x, perpendicularPoint.y, 'oy')
-        print('Pivot point:', pivot_point)
+        # print('Pivot point:', pivot_point)
         new_barrier_edges = find_barrier_edges(pivot_point, perpendicularPoint)
-        print('Barrier to overcome from pivot point to sightline:', new_barrier_edges)
+        # print('Barrier to overcome from pivot point to sightline:', new_barrier_edges)
         if not perpendicularPoint.is_between(sightLine.pointA, sightLine.pointB) or new_barrier_edges:
+            if can_see_sightLine(pivot_point)[0]:
+                final_point = can_see_sightLine(pivot_point)[1]
+                print('Found the sight line from the point', pivot_point, 'to the point', final_point)
+                plt.plot([pivot_point.x, final_point.x], [pivot_point.y, final_point.y], '--g')
+                distance_covered += pivot_point.distance(final_point)
+                print('The required distance =', distance_covered)
+                break
+
             new_barrier_vertices = find_barrier_vertices(new_barrier_edges)
             # barrier_vertices = new_barrier_vertices
             # print(new_barrier_vertices)
@@ -146,9 +167,9 @@ else:
             print('The required distance =', distance_covered)
             break
 
-
 # --- Plotting Section --- #
 plt.plot(guardPoint.x, guardPoint.y, 'ob')
 plt.plot(statuePoint.x, statuePoint.y, 'og')
 draw_boundary()
+plt.axis('scaled')
 plt.show()

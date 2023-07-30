@@ -27,9 +27,9 @@ class Point:
         distance1 = self.distance(point1)
         distance2 = self.distance(point2)
 
-        if any([x == 0 for x in (distance1, distance2)]):
-            return False
-        elif round(distance1 + distance2, 5) == round(point1.distance(point2), 5):
+        # if any([x == 0 for x in (distance1, distance2)]):
+        #     return False
+        if round(distance1 + distance2, 5) == round(point1.distance(point2), 5):
             return True
         else:
             return False

@@ -185,7 +185,14 @@ else:
 
     pivot_point = guardPoint
     while not can_reach_sighLine(pivot_point):
-        next_pivot = next_pivot_point(pivot_point)
+        try:
+            next_pivot = next_pivot_point(pivot_point)
+        except IndexError:
+            distance1 = pivot_point.distance(sightLine.pointA)
+            distance2 = pivot_point.distance(sightLine.pointB)
+            distance = distance1 if distance1 < distance2 else distance2
+            distance_covered += distance
+            break
         plt.plot([pivot_point.x, next_pivot.x], [pivot_point.y, next_pivot.y], '--g')
 
         distance_covered += pivot_point.distance(next_pivot)
@@ -233,10 +240,11 @@ else:
         #     distance_covered += pivot_point.distance(perpendicularPoint)
         #     print('The required distance =', distance_covered)
         #     break
-    finalLine = Line(pivot_point, slope=perpendicularLine_slope)
-    finalPoint = finalLine.solve(sightLine)
-    distance_covered += pivot_point.distance(finalPoint)
-    plt.plot([pivot_point.x, finalPoint.x], [pivot_point.y, finalPoint.y], '--g')
+    else:
+        finalLine = Line(pivot_point, slope=perpendicularLine_slope)
+        finalPoint = finalLine.solve(sightLine)
+        distance_covered += pivot_point.distance(finalPoint)
+        plt.plot([pivot_point.x, finalPoint.x], [pivot_point.y, finalPoint.y], '--g')
 
     print('Final pivot point:', pivot_point)
     print('Total distance covered=', distance_covered)

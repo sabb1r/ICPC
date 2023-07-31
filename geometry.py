@@ -4,13 +4,19 @@ class Point:
         self.y = y
 
     def __repr__(self):
-        return '({}, {})'.format(round(self.x, 5), round(self.y, 5))
+        return '({}, {})'.format(round(self.x, 2), round(self.y, 2))
 
     def __eq__(self, other):
         if round(self.x, 5) == round(other.x, 5) and round(self.y, 5) == round(other.y, 5):
             return True
         else:
             return False
+
+    def __getitem__(self, item):
+        if item == 0:
+            return self.x
+        elif item == 1:
+            return self.y
 
     def distance(self, anotherPoint):
         if isinstance(anotherPoint, Point):

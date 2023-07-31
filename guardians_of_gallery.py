@@ -52,10 +52,19 @@ def find_barrier_vertices(barrier_lines):
     barrier_points = []
 
     for ind, line in enumerate(barrier_lines):
-        if ind % 2 == 0:
-            barrier_points.append(line.pointB)
+        # have to test whether the lines are up boundary or down boundary
+        boundary_index = boundary.index(line)
+        if line.pointA.x > line.pointB.x or line.pointA.x > boundary[boundary_index + 1].pointB.x:
+            # It is upward boundary
+            if ind % 2 == 0:
+                barrier_points.append(line.pointA)
+            else:
+                barrier_points.append(line.pointB)
         else:
-            barrier_points.append(line.pointA)
+            if ind % 2 == 0:
+                barrier_points.append(line.pointB)
+            else:
+                barrier_points.append(line.pointA)
 
         if len(barrier_points) > 1 and barrier_points[-1] == barrier_points[-2]:
             del (barrier_points[-1])
@@ -95,13 +104,18 @@ def create_sight_line():
 
 
 def can_see_sightLine(pointX):
-    barrier_line1 = find_barrier_edges(pointX, sightLine.pointA)
-    barrier_line2 = find_barrier_edges(pointX, sightLine.pointB)
+    barrier_line1 = find_barrier_edges(pointX, sightLine.pointA, crossing=False)
+    barrier_line2 = find_barrier_edges(pointX, sightLine.pointB, crossing=False)
 
-    if not barrier_line1:
+    if len(barrier_line1) == 0 and len(barrier_line2) != 0:
         return True, sightLine.pointA
-    elif not barrier_line2:
+    elif len(barrier_line1) != 0 and len(barrier_line2) == 0:
         return True, sightLine.pointB
+    elif len(barrier_line1) == 0 and len(barrier_line2) == 0:
+        if pointX.distance(sightLine.pointA) <= pointX.distance(sightLine.pointB):
+            return True, sightLine.pointA
+        else:
+            return True, sightLine.pointB
     else:
         return False, None
 
@@ -130,11 +144,10 @@ def next_pivot_point(current_pivot):
         return probable_point
 
 
-
-
 def can_reach_sighLine(pointX):
     perpendicularLine = Line(pointX, slope=perpendicularLine_slope)
     perpendicularPoint = perpendicularLine.solve(sightLine)
+    # perpendicular_distance = pointX.distance(perpendicularPoint)
     if not perpendicularPoint.is_between(sightLine.pointA, sightLine.pointB):
         return False
     else:
@@ -175,6 +188,7 @@ if len(barrier_edges) == 0:
     print('The required distance =', distance_covered)
 else:
     barrier_vertices = find_barrier_vertices(barrier_edges)
+    barrier_vertices.sort(key=lambda x:x[0])
 
     sightLine = create_sight_line()
     plt.plot([sightLine.pointA.x, sightLine.pointB.x], [sightLine.pointA.y, sightLine.pointB.y], '--c')
@@ -202,6 +216,14 @@ else:
 
             distance_covered += distance
             break
+
+        yes, p = can_see_sightLine(pivot_point)
+        if yes:
+            if pivot_point.distance(p) < shortest_distance(next_pivot, sightLine) + pivot_point.distance(next_pivot):
+                path.append(p)
+                distance_covered += pivot_point.distance(p)
+                break
+
         plt.plot([pivot_point.x, next_pivot.x], [pivot_point.y, next_pivot.y], '--g')
         distance_covered += pivot_point.distance(next_pivot)
         pivot_point = next_pivot

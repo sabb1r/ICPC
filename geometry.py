@@ -4,7 +4,7 @@ class Point:
         self.y = y
 
     def __repr__(self):
-        return '({}, {})'.format(self.x, self.y)
+        return '({}, {})'.format(round(self.x, 5), round(self.y, 5))
 
     def __eq__(self, other):
         if round(self.x, 5) == round(other.x, 5) and round(self.y, 5) == round(other.y, 5):

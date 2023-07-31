@@ -120,8 +120,16 @@ def next_pivot_point(current_pivot):
 
     # Option 2
     probable_point = barrier_vertices.pop(0)
-    if len(find_barrier_edges(current_pivot, probable_point, crossing=False)) == 0:
+    barriers = find_barrier_edges(current_pivot, probable_point, crossing=False)
+    if len(barriers) == 0:
         return probable_point
+    else:
+        barrier_vertices.insert(0, probable_point)
+        barrier_points = find_barrier_vertices(barriers)
+        probable_point = barrier_points[-1]
+        return probable_point
+
+
 
 
 def can_reach_sighLine(pointX):
@@ -134,12 +142,6 @@ def can_reach_sighLine(pointX):
             return True
         else:
             return False
-
-
-vertices = []
-guardPoint = None
-statuePoint = None
-distance_covered = 0
 
 
 def take_input():
@@ -157,21 +159,22 @@ def take_input():
         statuePoint = Point(*[float(x) for x in file.readline().strip().split()])
 
 
+vertices = []
+guardPoint = None
+statuePoint = None
+path = []
+distance_covered = 0
+
 take_input()
 boundary = create_boundary()
-# print(boundary)
 barrier_edges = find_barrier_edges(guardPoint, statuePoint, crossing=False)
-# print(barrier_edges)
+path.append(guardPoint)
 
 if len(barrier_edges) == 0:
-    print('VOILA!!!')
+    print(path)
     print('The required distance =', distance_covered)
 else:
     barrier_vertices = find_barrier_vertices(barrier_edges)
-    # print(barrier_vertices)
-    # print('Barrier vertices for pointGuard and pointStatue:', barrier_vertices)
-    # for p in barrier_vertices:
-    #     plt.plot(p.x, p.y, 'ok')
 
     sightLine = create_sight_line()
     plt.plot([sightLine.pointA.x, sightLine.pointB.x], [sightLine.pointA.y, sightLine.pointB.y], '--c')
@@ -190,63 +193,30 @@ else:
         except IndexError:
             distance1 = pivot_point.distance(sightLine.pointA)
             distance2 = pivot_point.distance(sightLine.pointB)
-            distance = distance1 if distance1 < distance2 else distance2
+            if distance1 < distance2:
+                distance = distance1
+                path.append(sightLine.pointA)
+            else:
+                distance = distance2
+                path.append(sightLine.pointB)
+
             distance_covered += distance
             break
         plt.plot([pivot_point.x, next_pivot.x], [pivot_point.y, next_pivot.y], '--g')
-
         distance_covered += pivot_point.distance(next_pivot)
         pivot_point = next_pivot
+        path.append(pivot_point)
 
-        # perpendicularPoint = perpendicularLine.solve(sightLine)
-        # # print(perpendicularPoint)
-        # # plt.plot(perpendicularPoint.x, perpendicularPoint.y, 'oy')
-        # # print('Pivot point:', pivot_point)
-        # new_barrier_edges = find_barrier_edges(pivot_point, perpendicularPoint, crossing=False)
-        # # print('Barrier to overcome from pivot point to sightline:', new_barrier_edges)
-        # if not perpendicularPoint.is_between(sightLine.pointA, sightLine.pointB) or new_barrier_edges:
-        #     if can_see_sightLine(pivot_point)[0]:
-        #         final_point = can_see_sightLine(pivot_point)[1]
-        #         print('Found the sight line from the point', pivot_point, 'to the point', final_point)
-        #         plt.plot([pivot_point.x, final_point.x], [pivot_point.y, final_point.y], '--g')
-        #         distance_covered += pivot_point.distance(final_point)
-        #         print('The required distance =', distance_covered)
-        #         break
-        #
-        #     new_barrier_vertices = find_barrier_vertices(new_barrier_edges)
-        #     # barrier_vertices = new_barrier_vertices
-        #     # print(new_barrier_vertices)
-        #     probable_next_pivot = barrier_vertices.pop(0)
-        #     barrier_between_pivots = find_barrier_edges(pivot_point, probable_next_pivot)
-        #     if not barrier_between_pivots:
-        #         plt.plot([pivot_point.x, probable_next_pivot.x], [pivot_point.y, probable_next_pivot.y], '--g')
-        #         distance_covered += pivot_point.distance(probable_next_pivot)
-        #         pivot_point = probable_next_pivot
-        #     else:
-        #         print('BUT! There is barrier for moving to next pivot point')
-        #         print(barrier_between_pivots)
-        #         probable_next_pivot = find_barrier_vertices(barrier_between_pivots)[0]
-        #         plt.plot([pivot_point.x, probable_next_pivot.x], [pivot_point.y, probable_next_pivot.y], '--g')
-        #         distance_covered += pivot_point.distance(probable_next_pivot)
-        #         pivot_point = probable_next_pivot
-        #         barrier_vertices.insert(0, pivot_point)
-        #         # barrier_vertices = barrier_between_pivots
-        # else:
-        #     print('VOILA')
-        #     print('Found the sight line from the point', pivot_point, 'to the point', perpendicularPoint)
-        #     plt.plot([pivot_point.x, perpendicularPoint.x], [pivot_point.y, perpendicularPoint.y], '--g')
-        #     print('point to point distance', pivot_point.distance(perpendicularPoint))
-        #     print('shortest distance', shortest_distance(pivot_point, sightLine))
-        #     distance_covered += pivot_point.distance(perpendicularPoint)
-        #     print('The required distance =', distance_covered)
-        #     break
     else:
         finalLine = Line(pivot_point, slope=perpendicularLine_slope)
         finalPoint = finalLine.solve(sightLine)
+        path.append(finalPoint)
         distance_covered += pivot_point.distance(finalPoint)
         plt.plot([pivot_point.x, finalPoint.x], [pivot_point.y, finalPoint.y], '--g')
 
-    print('Final pivot point:', pivot_point)
+    for p in path:
+        print(p, '->', end=' ')
+    print()
     print('Total distance covered=', distance_covered)
 # --- Plotting Section --- #
 plt.plot(guardPoint.x, guardPoint.y, 'ob')

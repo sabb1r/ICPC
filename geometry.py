@@ -40,6 +40,30 @@ class Point:
         else:
             return False
 
+    def relative_position(self, pointX):
+        position = {}
+        if pointX.x < self.x:
+            position['Left'] = True
+            position['Right'] = False
+        elif pointX.x > self.x:
+            position['Left'] = False
+            position['Right'] = True
+        else:
+            position['Left'] = False
+            position['Right'] = False
+
+        if pointX.y < self.y:
+            position['Down'] = True
+            position['Up'] = False
+        elif pointX.y > self.y:
+            position['Down'] = False
+            position['Up'] = True
+        else:
+            position['Down'] = False
+            position['Up'] = False
+
+        return position
+
 
 class Line:
     def __init__(self, *args, slope=None):
@@ -68,6 +92,14 @@ class Line:
             self.constant = None
         else:
             self.constant = self.pointA.y - self.slope * self.pointA.x
+
+    def __call__(self, pointX):
+        if self.slope == 'Infinity':
+            return self.pointA.x
+        elif self.slope == 0:
+            return self.pointA.y
+        else:
+            return self.slope * pointX.x + self.constant
 
     def __repr__(self):
         if self.slope == 'Infinity':

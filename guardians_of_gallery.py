@@ -25,7 +25,7 @@ def draw_boundary():
     plt.plot(abscissa, ordinate, 'r')
 
 
-def find_barrier_edges(pointA, pointB, touch=True):
+def find_barrier_edges(pointA, pointB, touch_barrier=False, touch_line=False, meet=False):
     barrier_lines = []
     lineAB = Line(pointA, pointB)
     for edge in boundary:
@@ -37,12 +37,29 @@ def find_barrier_edges(pointA, pointB, touch=True):
         elif not intersecting_point.is_between(pointA, pointB):
             continue
         else:
-            if not touch:
-                if intersecting_point in [edge.pointA, edge.pointB] or intersecting_point in [pointA, pointB]:
-                    continue
+            # if not touch:
+            #     if intersecting_point in [edge.pointA, edge.pointB] or intersecting_point in [pointA, pointB]:
+            #         continue
+            #     else:
+            #         barrier_lines.append(edge)
+            # else:
+            #     barrier_lines.append(edge)
+
+            if intersecting_point in [pointA, pointB] and intersecting_point not in [edge.pointA, edge.pointB]:
+                if touch_barrier:
+                    barrier_lines.append(edge)
                 else:
+                    continue
+            elif intersecting_point in [edge.pointA, edge.pointB] and intersecting_point not in [pointA, pointB]:
+                if touch_line:
+                    barrier_lines.append(edge)
+                else:
+                    continue
+            elif intersecting_point in [pointA, pointB] and intersecting_point in [edge.pointA, edge.pointB]:
+                if meet:
                     barrier_lines.append(edge)
             else:
+                # Criss crossed
                 barrier_lines.append(edge)
 
     return barrier_lines
@@ -75,18 +92,23 @@ def find_barrier_vertices(barrier_lines):
 
 def create_sight_line():
     for point in barrier_vertices:
-        crossings = find_barrier_edges(point, statuePoint, touch=False)
+        crossings = find_barrier_edges(point, statuePoint)
         if len(crossings) == 0:
             probable_line = Line(statuePoint, point)
             break
         else:
             if barrier_vertices.index(point) == len(barrier_vertices) - 1:
                 for p in find_barrier_vertices(crossings):
-                    if len(find_barrier_edges(p, statuePoint, touch=False)) == 0:
+                    if len(find_barrier_edges(p, statuePoint)) == 0:
                         probable_line = Line(statuePoint, p)
                         break
             else:
-                continue
+                # continue
+                points = find_barrier_vertices(crossings)
+                if points[0] == barrier_vertices[barrier_vertices.index(point) + 1]:
+                    continue
+                else:
+                    barrier_vertices.insert(barrier_vertices.index(point) + 1, points[0])
 
     for edge in boundary:
         intersecting_point = edge.solve(probable_line)
@@ -95,15 +117,15 @@ def create_sight_line():
         elif (intersecting_point.is_between(edge.pointA, edge.pointB)) and (
                 not intersecting_point.is_between(probable_line.pointA, probable_line.pointB)) and (
                 intersecting_point.distance(probable_line.pointB) < intersecting_point.distance(probable_line.pointA)):
-            if len(find_barrier_edges(intersecting_point, probable_line.pointB, touch=False)) == 0:
+            if len(find_barrier_edges(intersecting_point, probable_line.pointB)) == 0:
                 return Line(probable_line.pointB, intersecting_point)
             else:
                 continue
 
 
 def can_see_sightLine(pointX):
-    barrier_line1 = find_barrier_edges(pointX, sightLine.pointA, touch=False)
-    barrier_line2 = find_barrier_edges(pointX, sightLine.pointB, touch=False)
+    barrier_line1 = find_barrier_edges(pointX, sightLine.pointA)
+    barrier_line2 = find_barrier_edges(pointX, sightLine.pointB)
 
     if len(barrier_line1) == 0 and len(barrier_line2) != 0:
         return True, sightLine.pointA
@@ -120,7 +142,7 @@ def can_see_sightLine(pointX):
 
 def next_pivot_point(current_pivot):
     probable_point = barrier_vertices.pop(0)
-    barriers = find_barrier_edges(current_pivot, probable_point, touch=False)
+    barriers = find_barrier_edges(current_pivot, probable_point)
     if len(barriers) == 0:
         return probable_point
     else:
@@ -131,11 +153,11 @@ def next_pivot_point(current_pivot):
 
 
 def next_pivot_point_ver2(pivot):
-    new_barrier = find_barrier_edges(pivot, midPoint, touch=False)
+    new_barrier = find_barrier_edges(pivot, midPoint)
     new_barrier_vertices = find_barrier_vertices(new_barrier)
     probable_point = new_barrier_vertices[0]
 
-    barriers = find_barrier_edges(pivot, probable_point, touch=False)
+    barriers = find_barrier_edges(pivot, probable_point)
     if len(barriers) == 0:
         return probable_point
     else:
@@ -147,7 +169,7 @@ def next_pivot_point_ver2(pivot):
 def can_reach_sighLine(pointX):
     perpendicularLine = Line(pointX, slope=perpendicularLine_slope)
     perpendicularPoint = perpendicularLine.solve(sightLine)
-    new_barriers = find_barrier_edges(pointX, perpendicularPoint, touch=False)
+    new_barriers = find_barrier_edges(pointX, perpendicularPoint)
     if not perpendicularPoint.is_between(sightLine.pointA, sightLine.pointB):
         return False
     else:
@@ -178,7 +200,7 @@ distance_covered = 0
 
 take_input()
 boundary = create_boundary()
-barrier_edges = find_barrier_edges(guardPoint, statuePoint, touch=False)
+barrier_edges = find_barrier_edges(guardPoint, statuePoint)
 path.append(guardPoint)
 
 if len(barrier_edges) == 0:
@@ -223,6 +245,7 @@ else:
             if pivot_point.distance(p) < shortest_distance(next_pivot, sightLine) + pivot_point.distance(next_pivot):
                 path.append(p)
                 distance_covered += pivot_point.distance(p)
+                plt.plot([pivot_point.x, p.x], [pivot_point.y, p.y], '--g')
                 break
 
         plt.plot([pivot_point.x, next_pivot.x], [pivot_point.y, next_pivot.y], '--g')

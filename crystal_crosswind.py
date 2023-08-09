@@ -1,6 +1,6 @@
 dim_x, dim_y, no_wind_flow = 0, 0, 0
 crystal = {}
-wind_direction = []
+wind_direction = {}
 
 
 def take_input():
@@ -10,11 +10,14 @@ def take_input():
         crystal = {k: '.' for k in ((i, j) for i in range(1, dim_x + 1) for j in range(1, dim_y + 1))}
         for i in range(no_wind_flow):
             text = file.readline().strip().split()
-            wind_direction.append(text[:2])
+            wind = tuple([int(n) for n in text[:2]])
             no_boundary = int(text[2])
+            boundary = []
             for j in range(3, 2 * no_boundary + 3, 2):
                 coordinate = tuple([int(n) for n in text[j: j + 2]])
+                boundary.append(coordinate)
                 crystal[coordinate] = '#'
+            wind_direction[wind] = boundary
 
 
 def print_output():
@@ -26,3 +29,9 @@ def print_output():
 
 take_input()
 print_output()
+# print(wind_direction)
+
+# for key in wind_direction.keys():
+#     for val in wind_direction[key]:
+#         if val not in wind_direction
+

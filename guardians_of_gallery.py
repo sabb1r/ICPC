@@ -1,4 +1,6 @@
 import os
+import sys
+
 from geometry import *
 from matplotlib import pyplot as plt
 
@@ -37,14 +39,6 @@ def find_barrier_edges(pointA, pointB, touch_barrier=False, touch_line=False, me
         elif not intersecting_point.is_between(pointA, pointB):
             continue
         else:
-            # if not touch:
-            #     if intersecting_point in [edge.pointA, edge.pointB] or intersecting_point in [pointA, pointB]:
-            #         continue
-            #     else:
-            #         barrier_lines.append(edge)
-            # else:
-            #     barrier_lines.append(edge)
-
             if intersecting_point in [pointA, pointB] and intersecting_point not in [edge.pointA, edge.pointB]:
                 if touch_barrier:
                     barrier_lines.append(edge)
@@ -140,19 +134,7 @@ def can_see_sightLine(pointX):
         return False, None
 
 
-def next_pivot_point(current_pivot):
-    probable_point = barrier_vertices.pop(0)
-    barriers = find_barrier_edges(current_pivot, probable_point)
-    if len(barriers) == 0:
-        return probable_point
-    else:
-        barrier_vertices.insert(0, probable_point)
-        barrier_points = find_barrier_vertices(barriers)
-        probable_point = barrier_points[-1]
-        return probable_point
-
-
-def next_pivot_point_ver2(pivot):
+def next_pivot_point(pivot):
     new_barrier = find_barrier_edges(pivot, midPoint)
     new_barrier_vertices = find_barrier_vertices(new_barrier)
     probable_point = new_barrier_vertices[0]
@@ -181,6 +163,7 @@ def can_reach_sighLine(pointX):
 
 def take_input():
     file_path = os.path.join(os.getcwd(), 'input.txt')
+    # file_path = sys.argv[1]
     with open(file_path, 'r') as file:
         no_vertex = int(file.readline().strip())
         for i in range(no_vertex):
@@ -196,16 +179,45 @@ vertices = []
 guardPoint = None
 statuePoint = None
 path = []
-distance_covered = 0
+distance_covered = 0.0
+
 
 take_input()
 boundary = create_boundary()
+draw_boundary()
+plt.show()
 barrier_edges = find_barrier_edges(guardPoint, statuePoint)
 path.append(guardPoint)
 
 if len(barrier_edges) == 0:
-    print(path)
-    print('The required distance =', distance_covered)
+    barrier_edges = find_barrier_edges(guardPoint, statuePoint, touch_barrier=True, touch_line=True, meet=True)
+    barrier_vertices = find_barrier_vertices(barrier_edges)
+    barrier_vertices.sort(key=lambda x: x[0])
+    if len(barrier_vertices) >= 2:
+        gP = guardPoint
+        while True:
+            gP1 = Point(gP.x + 0.00001, gP.y + 0.00001)
+            gP2 = Point(gP.x + 0.00001, gP.y - 0.00001)
+            gP3 = Point(gP.x - 0.00001, gP.y + 0.00001)
+            gP4 = Point(gP.x - 0.00001, gP.y - 0.00001)
+
+            if any([len(find_barrier_edges(x, statuePoint, touch_barrier=True, touch_line=True, meet=True)) == 0 for x in (gP1, gP2, gP3, gP4)]):
+                if gP == guardPoint:
+                    # pass
+                    print('The guard need not move at all!')
+                    print('Distance needed to move =', distance_covered)
+                break
+            else:
+                nP = barrier_vertices.pop(0)
+                distance_covered += gP.distance(nP)
+                gP = nP
+
+    else:
+        # pass
+        print('The guard need not move at all!')
+        print('Distance needed to move =', distance_covered)
+
+
 else:
     barrier_vertices = find_barrier_vertices(barrier_edges)
     barrier_vertices.sort(key=lambda x: x[0])
@@ -226,7 +238,7 @@ else:
     while not can_reach_sighLine(pivot_point):
         try:
             # next_pivot = next_pivot_point(pivot_point)
-            next_pivot = next_pivot_point_ver2(pivot_point)
+            next_pivot = next_pivot_point(pivot_point)
         except IndexError:
             distance1 = pivot_point.distance(sightLine.pointA)
             distance2 = pivot_point.distance(sightLine.pointB)
@@ -253,7 +265,6 @@ else:
         pivot_point = next_pivot
         path.append(pivot_point)
 
-
     else:
         finalLine = Line(pivot_point, slope=perpendicularLine_slope)
         finalPoint = finalLine.solve(sightLine)
@@ -268,9 +279,12 @@ else:
             print(p, '->', end=' ')
     print('Total distance covered=', distance_covered)
 
-# --- Plotting Section --- #
+#--- Plotting Section --- #
 plt.plot(guardPoint.x, guardPoint.y, 'ob')
 plt.plot(statuePoint.x, statuePoint.y, 'og')
 draw_boundary()
 plt.axis('scaled')
 plt.show()
+
+# with open(sys.argv[2] + sys.argv[1].split('/')[-1].split('.')[0] + '.ans', 'w') as f:
+#     f.write(str(distance_covered))

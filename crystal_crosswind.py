@@ -27,11 +27,82 @@ def print_output():
         print('\n')
 
 
+def violate_boundary(point):
+    for wind in wind_direction.keys():
+        if any([(val[0] - wind[0], val[1] - wind[1]) == point for val in wind_direction[wind]]):
+            return True
+    return False
+
+
+def can_place(point):
+    for wind in wind_direction.keys():
+        diff_point = (point[0] - wind[0], point[1] - wind[1])
+        if any([diff_point[0] <= 0 or diff_point[0] > dim_x, diff_point[1] <= 0 or diff_point[1] > dim_y]):
+            return False, 0
+        elif diff_point not in boundary:
+            if diff_point in confirm_dot:
+                return False, 1
+            else:
+                return False, 2
+    else:
+        return True, 1
+
+
 take_input()
+
+boundary = set()
+for b in crystal.keys():
+    if crystal[b] == '#':
+        boundary.add(b)
+
+for key in wind_direction.keys():
+    boundary_set = set(wind_direction[key])
+    not_in_set = boundary.difference(boundary_set)
+
+    for b in not_in_set:
+        p = (b[0] - key[0], b[1] - key[1])
+        if p in boundary:
+            continue
+        else:
+            crystal[p] = '#'
+
+print('Minimal')
 print_output()
-# print(wind_direction)
 
-# for key in wind_direction.keys():
-#     for val in wind_direction[key]:
-#         if val not in wind_direction
+not_boundary = set()
+for b in crystal.keys():
+    if crystal[b] == '.':
+        not_boundary.add(b)
 
+boundary = list(set(crystal.keys()).difference(not_boundary))
+boundary.sort()
+
+not_boundary = list(not_boundary)
+not_boundary.sort()
+confirm_dot = []
+
+for nb in not_boundary:
+    if violate_boundary(nb):
+        confirm_dot.append(nb)
+    else:
+        logic, val = can_place(nb)
+        if logic:
+            boundary.append(nb)
+            # not_boundary.remove(nb)
+        else:
+            if val == 0:
+                confirm_dot.append(nb)
+                # not_boundary.remove(nb)
+            elif val == 1:
+                confirm_dot.append(nb)
+                # not_boundary.remove(nb)
+            elif val == 2:
+                not_boundary.append(nb)
+            else:
+                continue
+
+for elem in boundary:
+    crystal[elem] = '#'
+
+print('Maximal')
+print_output()

@@ -1,30 +1,39 @@
+import sys
+
 dim_x, dim_y, no_wind_flow = 0, 0, 0
 crystal = {}
 wind_direction = {}
 
 
 def take_input():
-    with open('crystal_crosswind_input.txt', 'r') as file:
+    with open(sys.argv[1], 'r') as file:
         global dim_x, dim_y, no_wind_flow, crystal, wind_direction
         dim_x, dim_y, no_wind_flow = [int(val) for val in file.readline().strip().split(' ')]
         crystal = {k: '.' for k in ((i, j) for i in range(1, dim_x + 1) for j in range(1, dim_y + 1))}
         for i in range(no_wind_flow):
-            text = file.readline().strip().split()
-            wind = tuple([int(n) for n in text[:2]])
+            text = file.readline().strip().split(' ')
+            wind = tuple(map(int, text[:2]))
+            # wind = tuple([int(n) for n in text[:2]])
             no_boundary = int(text[2])
             boundary = []
             for j in range(3, 2 * no_boundary + 3, 2):
-                coordinate = tuple([int(n) for n in text[j: j + 2]])
+                coordinate = tuple(map(int, text[j: j+2]))
                 boundary.append(coordinate)
                 crystal[coordinate] = '#'
             wind_direction[wind] = boundary
 
 
-def print_output():
+def print_output(structure):
+    matrix = []
     for x in range(1, dim_y + 1):
+        line = []
         for y in range(1, dim_x + 1):
-            print(crystal[(y, x)], end='')
-        print('\n')
+            line.append(structure[(y, x)])
+            # print(structure[(y, x)], end='')
+        # print('\n')
+        matrix.append(''.join(line) + '\n')
+
+    return matrix
 
 
 def violate_boundary(point):
@@ -48,6 +57,13 @@ def can_place(point):
         return True, 1
 
 
+def write_output():
+    with open(sys.argv[2] + sys.argv[1].split('/')[-1].split('.')[0] + '.ans', 'a') as file:
+        file.writelines(minimal_structure)
+        file.write('\n')
+        file.writelines(maximal_structure)
+
+
 take_input()
 
 boundary = set()
@@ -66,8 +82,8 @@ for key in wind_direction.keys():
         else:
             crystal[p] = '#'
 
-print('Minimal')
-print_output()
+# print('Minimal')
+minimal_structure = print_output(crystal)
 
 not_boundary = set()
 for b in crystal.keys():
@@ -104,5 +120,7 @@ for nb in not_boundary:
 for elem in boundary:
     crystal[elem] = '#'
 
-print('Maximal')
-print_output()
+# print('Maximal')
+maximal_structure = print_output(crystal)
+
+write_output()

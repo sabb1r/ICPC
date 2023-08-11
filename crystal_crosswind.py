@@ -9,7 +9,8 @@ probable_boundary_points = set()
 
 
 def take_input():
-    with open(sys.argv[1], 'r') as file:
+    # with open(sys.argv[1], 'r') as file:
+    with open('crystal_crosswind_input.txt', 'r') as file:
         global dim_x, dim_y, no_wind_flow, crystal_points, boundary_points, wind_direction
         dim_x, dim_y, no_wind_flow = [int(val) for val in file.readline().strip().split(' ')]
         crystal_points = [(i, j) for i in range(1, dim_x + 1) for j in range(1, dim_y + 1)]
@@ -25,7 +26,7 @@ def take_input():
             wind_direction[wind] = boundary
 
 
-def print_output(structure):
+def create_output(structure):
     matrix = []
     for x in range(1, dim_y + 1):
         line = []
@@ -73,19 +74,30 @@ def is_boundary(point, wind):
 def insert_boundary(point):
     for wind in wind_direction:
         diff_point = (point[0] - wind[0], point[1] - wind[1])
-        if diff_point in boundary_points or is_outside(diff_point):
+        if diff_point in boundary_points:
             continue
+        elif is_outside(diff_point):
+            raise Exception
         else:
             if diff_point in confirmed_empty_points:
                 raise Exception
             else:
-                insert_boundary(diff_point)
+                try:
+                    insert_boundary(diff_point)
+                except Exception:
+                    confirmed_empty_points.add(diff_point)
+                    break
 
     else:
         boundary_points.add(point)
-        probable_boundary_points.remove(point)
+        # probable_boundary_points.remove(point)
     # boundary_points.add(point)
     # probable_boundary_points.remove(point)
+
+
+def print_output(structure):
+    for line in structure:
+        print(line)
 
 
 take_input()
@@ -93,7 +105,9 @@ take_input()
 # Create confirmed_empty_points set
 for key, val in wind_direction.items():
     for point in val:
-        confirmed_empty_points.add((point[0] - key[0], point[1] - key[1]))
+        p = (point[0] - key[0], point[1] - key[1])
+        if not is_outside(p):
+            confirmed_empty_points.add(p)
 
 # Create probable_boundary_points set
 probable_boundary_points = set(crystal_points).difference(confirmed_empty_points).difference(boundary_points)
@@ -107,16 +121,21 @@ for wind, boundaries in wind_direction.items():
         else:
             insert_boundary((boundary[0] - wind[0], boundary[1] - wind[1]))
 
-minimal_structure = print_output(boundary_points)
+minimal_structure = create_output(boundary_points)
 
 # Maximal structure generation
-probable_boundary = list(probable_boundary_points)
-for point in probable_boundary:
+# probable_boundary_points = list(probable_boundary_points)
+# probable_boundary_points.sort()
+while len(probable_boundary_points) != 0:
+    prob_point = probable_boundary_points.pop()
     try:
-        insert_boundary(point)
+        insert_boundary(prob_point)
     except Exception:
-        confirmed_empty_points.add(point)
+        confirmed_empty_points.add(prob_point)
         continue
 
-maximal_structure = print_output(boundary_points)
-write_output()
+maximal_structure = create_output(boundary_points)
+# write_output()
+
+print_output(minimal_structure)
+print_output(maximal_structure)

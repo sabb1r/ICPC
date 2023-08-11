@@ -17,11 +17,11 @@ def take_input():
             text = file.readline().strip().split(' ')
             wind = tuple(map(int, text[:2]))
             no_boundary = int(text[2])
-            boundary = []
+            boundary = set()
             for j in range(3, 2 * no_boundary + 3, 2):
                 coordinate = tuple(map(int, text[j: j + 2]))
                 boundary_points.add(coordinate)
-                boundary.append(coordinate)
+                boundary.add(coordinate)
             wind_direction[wind] = boundary
 
 
@@ -48,20 +48,6 @@ def violate_boundary(point):
     return False
 
 
-def can_place(point):
-    for wind in wind_direction.keys():
-        diff_point = (point[0] - wind[0], point[1] - wind[1])
-        if any([diff_point[0] <= 0 or diff_point[0] > dim_x, diff_point[1] <= 0 or diff_point[1] > dim_y]):
-            return False, 0
-        elif diff_point not in boundary:
-            if diff_point in confirm_dot:
-                return False, 1
-            else:
-                return False, 2
-    else:
-        return True, 1
-
-
 def write_output():
     with open(sys.argv[2] + sys.argv[1].split('/')[-1].split('.')[0] + '.ans', 'a') as file:
         file.writelines(minimal_structure)
@@ -76,6 +62,14 @@ def is_outside(point):
         return False
 
 
+def is_boundary(point, wind):
+    p = (point[0] - wind[0], point[1] - wind[1])
+    if is_outside(p) or p not in boundary_points:
+        return True
+    else:
+        return False
+
+
 def insert_boundary(point):
     for wind in wind_direction:
         diff_point = (point[0] - wind[0], point[1] - wind[1])
@@ -83,13 +77,15 @@ def insert_boundary(point):
             continue
         else:
             if diff_point in confirmed_empty_points:
-                raise Exception('Not possible to insert')
+                raise Exception
             else:
                 insert_boundary(diff_point)
 
     else:
         boundary_points.add(point)
         probable_boundary_points.remove(point)
+    # boundary_points.add(point)
+    # probable_boundary_points.remove(point)
 
 
 take_input()
@@ -97,12 +93,30 @@ take_input()
 # Create confirmed_empty_points set
 for key, val in wind_direction.items():
     for point in val:
-        global confirmed_empty_points
         confirmed_empty_points.add((point[0] - key[0], point[1] - key[1]))
 
 # Create probable_boundary_points set
 probable_boundary_points = set(crystal_points).difference(confirmed_empty_points).difference(boundary_points)
 
+# Minimal structure generation
+for wind, boundaries in wind_direction.items():
+    other_boundary_points = boundary_points.difference(boundaries)
+    for boundary in other_boundary_points:
+        if not is_boundary(boundary, wind):
+            continue
+        else:
+            insert_boundary((boundary[0] - wind[0], boundary[1] - wind[1]))
 
+minimal_structure = print_output(boundary_points)
 
+# Maximal structure generation
+probable_boundary = list(probable_boundary_points)
+for point in probable_boundary:
+    try:
+        insert_boundary(point)
+    except Exception:
+        confirmed_empty_points.add(point)
+        continue
+
+maximal_structure = print_output(boundary_points)
 write_output()

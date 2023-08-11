@@ -1,25 +1,27 @@
 import sys
 
 dim_x, dim_y, no_wind_flow = 0, 0, 0
-crystal = {}
-wind_direction = {}
+crystal_points = list()
+boundary_points = set()
+wind_direction = dict()
+confirmed_empty_points = set()
+probable_boundary_points = set()
 
 
 def take_input():
     with open(sys.argv[1], 'r') as file:
-        global dim_x, dim_y, no_wind_flow, crystal, wind_direction
+        global dim_x, dim_y, no_wind_flow, crystal_points, boundary_points, wind_direction
         dim_x, dim_y, no_wind_flow = [int(val) for val in file.readline().strip().split(' ')]
-        crystal = {k: '.' for k in ((i, j) for i in range(1, dim_x + 1) for j in range(1, dim_y + 1))}
+        crystal_points = [(i, j) for i in range(1, dim_x + 1) for j in range(1, dim_y + 1)]
         for i in range(no_wind_flow):
             text = file.readline().strip().split(' ')
             wind = tuple(map(int, text[:2]))
-            # wind = tuple([int(n) for n in text[:2]])
             no_boundary = int(text[2])
             boundary = []
             for j in range(3, 2 * no_boundary + 3, 2):
-                coordinate = tuple(map(int, text[j: j+2]))
+                coordinate = tuple(map(int, text[j: j + 2]))
+                boundary_points.add(coordinate)
                 boundary.append(coordinate)
-                crystal[coordinate] = '#'
             wind_direction[wind] = boundary
 
 
@@ -28,7 +30,10 @@ def print_output(structure):
     for x in range(1, dim_y + 1):
         line = []
         for y in range(1, dim_x + 1):
-            line.append(structure[(y, x)])
+            if (y, x) in structure:
+                line.append('#')
+            else:
+                line.append('.')
             # print(structure[(y, x)], end='')
         # print('\n')
         matrix.append(''.join(line) + '\n')
@@ -64,63 +69,40 @@ def write_output():
         file.writelines(maximal_structure)
 
 
-take_input()
+def is_outside(point):
+    if any([point[0] <= 0 or point[0] > dim_x, point[1] <= 0 or point[1] > dim_y]):
+        return True
+    else:
+        return False
 
-boundary = set()
-for b in crystal.keys():
-    if crystal[b] == '#':
-        boundary.add(b)
 
-for key in wind_direction.keys():
-    boundary_set = set(wind_direction[key])
-    not_in_set = boundary.difference(boundary_set)
-
-    for b in not_in_set:
-        p = (b[0] - key[0], b[1] - key[1])
-        if p in boundary:
+def insert_boundary(point):
+    for wind in wind_direction:
+        diff_point = (point[0] - wind[0], point[1] - wind[1])
+        if diff_point in boundary_points or is_outside(diff_point):
             continue
         else:
-            crystal[p] = '#'
-
-# print('Minimal')
-minimal_structure = print_output(crystal)
-
-not_boundary = set()
-for b in crystal.keys():
-    if crystal[b] == '.':
-        not_boundary.add(b)
-
-boundary = list(set(crystal.keys()).difference(not_boundary))
-boundary.sort()
-
-not_boundary = list(not_boundary)
-not_boundary.sort()
-confirm_dot = []
-
-for nb in not_boundary:
-    if violate_boundary(nb):
-        confirm_dot.append(nb)
-    else:
-        logic, val = can_place(nb)
-        if logic:
-            boundary.append(nb)
-            # not_boundary.remove(nb)
-        else:
-            if val == 0:
-                confirm_dot.append(nb)
-                # not_boundary.remove(nb)
-            elif val == 1:
-                confirm_dot.append(nb)
-                # not_boundary.remove(nb)
-            elif val == 2:
-                not_boundary.append(nb)
+            if diff_point in confirmed_empty_points:
+                raise Exception('Not possible to insert')
             else:
-                continue
+                insert_boundary(diff_point)
 
-for elem in boundary:
-    crystal[elem] = '#'
+    else:
+        boundary_points.add(point)
+        probable_boundary_points.remove(point)
 
-# print('Maximal')
-maximal_structure = print_output(crystal)
+
+take_input()
+
+# Create confirmed_empty_points set
+for key, val in wind_direction.items():
+    for point in val:
+        global confirmed_empty_points
+        confirmed_empty_points.add((point[0] - key[0], point[1] - key[1]))
+
+# Create probable_boundary_points set
+probable_boundary_points = set(crystal_points).difference(confirmed_empty_points).difference(boundary_points)
+
+
 
 write_output()

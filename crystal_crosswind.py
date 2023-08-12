@@ -72,27 +72,24 @@ def is_boundary(point, wind):
 
 
 def insert_boundary(point):
-    for wind in wind_direction:
-        diff_point = (point[0] - wind[0], point[1] - wind[1])
-        if diff_point in boundary_points:
-            continue
-        elif is_outside(diff_point):
-            raise Exception
-        else:
-            if diff_point in confirmed_empty_points:
-                raise Exception
-            else:
-                try:
-                    insert_boundary(diff_point)
-                except Exception:
-                    confirmed_empty_points.add(diff_point)
-                    break
+    diff_points = [(point[0] - wind[0], point[1] - wind[1]) for wind in wind_direction]
 
+    if any([is_outside(x) for x in diff_points]):
+        raise Exception
+    elif any([x in confirmed_empty_points for x in diff_points]):
+        raise Exception
+
+    for x in diff_points:
+        if x in boundary_points:
+            continue
+        else:
+            try:
+                insert_boundary(x)
+            except Exception:
+                confirmed_empty_points.add(x)
+                break
     else:
         boundary_points.add(point)
-        # probable_boundary_points.remove(point)
-    # boundary_points.add(point)
-    # probable_boundary_points.remove(point)
 
 
 def print_output(structure):
@@ -124,8 +121,6 @@ for wind, boundaries in wind_direction.items():
 minimal_structure = create_output(boundary_points)
 
 # Maximal structure generation
-# probable_boundary_points = list(probable_boundary_points)
-# probable_boundary_points.sort()
 while len(probable_boundary_points) != 0:
     prob_point = probable_boundary_points.pop()
     try:

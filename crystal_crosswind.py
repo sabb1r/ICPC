@@ -1,7 +1,7 @@
 import sys
 
 dim_x, dim_y, no_wind_flow = 0, 0, 0
-crystal_points = list()
+crystal_points = set()
 boundary_points = set()
 wind_direction = dict()
 confirmed_empty_points = set()
@@ -13,7 +13,7 @@ def take_input():
     with open(sys.argv[1], 'r') as file:
         global dim_x, dim_y, no_wind_flow, crystal_points, boundary_points, wind_direction
         dim_x, dim_y, no_wind_flow = [int(val) for val in file.readline().strip().split(' ')]
-        crystal_points = [(i, j) for i in range(1, dim_x + 1) for j in range(1, dim_y + 1)]
+        crystal_points = {(i, j) for i in range(1, dim_x + 1) for j in range(1, dim_y + 1)}
         for i in range(no_wind_flow):
             text = file.readline().strip().split(' ')
             wind = tuple(map(int, text[:2]))
@@ -69,9 +69,7 @@ def insert_boundary(point):
     recursion_stop.add(point)
     diff_points = [(point[0] - wind[0], point[1] - wind[1]) for wind in wind_direction]
 
-    if any([is_outside(x) for x in diff_points]):
-        raise Exception
-    elif any([x in confirmed_empty_points for x in diff_points]):
+    if any([is_outside(x) or x in confirmed_empty_points for x in diff_points]):
         raise Exception
 
     else:
@@ -102,7 +100,7 @@ for key, val in wind_direction.items():
             confirmed_empty_points.add(p)
 
 # Create probable_boundary_points set
-probable_boundary_points = set(crystal_points).difference(confirmed_empty_points).difference(boundary_points)
+probable_boundary_points = crystal_points.difference(confirmed_empty_points).difference(boundary_points)
 
 # Minimal structure generation
 for wind, boundaries in wind_direction.items():

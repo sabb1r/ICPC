@@ -6,11 +6,11 @@ boundary_points = set()
 wind_direction = dict()
 confirmed_empty_points = set()
 probable_boundary_points = set()
+recursion_stop = set()
 
 
 def take_input():
-    # with open(sys.argv[1], 'r') as file:
-    with open('crystal_crosswind_input.txt', 'r') as file:
+    with open(sys.argv[1], 'r') as file:
         global dim_x, dim_y, no_wind_flow, crystal_points, boundary_points, wind_direction
         dim_x, dim_y, no_wind_flow = [int(val) for val in file.readline().strip().split(' ')]
         crystal_points = [(i, j) for i in range(1, dim_x + 1) for j in range(1, dim_y + 1)]
@@ -35,22 +35,15 @@ def create_output(structure):
                 line.append('#')
             else:
                 line.append('.')
-            # print(structure[(y, x)], end='')
-        # print('\n')
-        matrix.append(''.join(line) + '\n')
+
+        line.append('\n')
+        matrix.append(''.join(line))
 
     return matrix
 
 
-def violate_boundary(point):
-    for wind in wind_direction.keys():
-        if any([(val[0] - wind[0], val[1] - wind[1]) == point for val in wind_direction[wind]]):
-            return True
-    return False
-
-
 def write_output():
-    with open(sys.argv[2] + sys.argv[1].split('/')[-1].split('.')[0] + '.ans', 'a') as file:
+    with open(sys.argv[2] + sys.argv[1].split('/')[-1].split('.')[0] + '.ans', 'w') as file:
         file.writelines(minimal_structure)
         file.write('\n')
         file.writelines(maximal_structure)
@@ -72,6 +65,8 @@ def is_boundary(point, wind):
 
 
 def insert_boundary(point):
+    global recursion_stop
+    recursion_stop.add(point)
     diff_points = [(point[0] - wind[0], point[1] - wind[1]) for wind in wind_direction]
 
     if any([is_outside(x) for x in diff_points]):
@@ -79,22 +74,22 @@ def insert_boundary(point):
     elif any([x in confirmed_empty_points for x in diff_points]):
         raise Exception
 
-    for x in diff_points:
-        if x in boundary_points:
-            continue
-        else:
-            try:
-                insert_boundary(x)
-            except Exception:
-                confirmed_empty_points.add(x)
-                break
     else:
-        boundary_points.add(point)
-
-
-def print_output(structure):
-    for line in structure:
-        print(line)
+        stats = []
+        for x in diff_points:
+            if x in boundary_points or x in recursion_stop:
+                stats.append(True)
+            else:
+                try:
+                    insert_boundary(x)
+                except Exception:
+                    confirmed_empty_points.add(x)
+                    stats.append(False)
+                    break
+        if not all(stats):
+            raise Exception
+        else:
+            boundary_points.add(point)
 
 
 take_input()
@@ -127,10 +122,6 @@ while len(probable_boundary_points) != 0:
         insert_boundary(prob_point)
     except Exception:
         confirmed_empty_points.add(prob_point)
-        continue
 
 maximal_structure = create_output(boundary_points)
-# write_output()
-
-print_output(minimal_structure)
-print_output(maximal_structure)
+write_output()

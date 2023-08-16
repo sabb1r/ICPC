@@ -29,11 +29,11 @@ def show_path(room_from, room_to, room_throgh=None):
     """
     :param room_from: A room object
     :param room_to: A room object
-    :param room_throgh: A room object
+    :param room_through: A room object
     :return: True - if I have to face "room_through" while going from "room_from" to "room_to"
     """
 
-    if len(room_from.edge) == 0:
+    if len(room_from.edge) == 1:
         return []
     else:
         path = []
@@ -42,7 +42,12 @@ def show_path(room_from, room_to, room_throgh=None):
             if e.room_number == room_to.room_number:
                 return path
             else:
-                path.append(show_path(e, room_to, room_throgh=None))
+                room = show_path(e, room_to, room_throgh=None)
+                if len(room) !=0 and room[-1].room_number == room_to.room_number:
+                    path.append(room)
+                    return path
+
+            path.clear()
 
 
 def plot_tree(room):
@@ -65,6 +70,7 @@ room1.add_link(room3, 1)
 room3.add_link(room4, 3)
 room3.add_link(room5, 2)
 
+print(show_path(room1, room5))
 
 plot_tree(room1)
 nx.draw(G, with_labels=True, font_weight='bold')

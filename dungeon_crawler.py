@@ -7,6 +7,7 @@ class Room:
         self.room_number = room_number
         self.edge = set()
         self.time = {}
+        self.parent = set()
 
     def add_link(self, room, time):
         self.edge.add(room)
@@ -40,11 +41,12 @@ def show_path(room_from, room_to, room_throgh=None):
         return []
     else:
         path = []
-        for e in room_from.edge:
+        for e in room_from.edge.difference(room_from.parent):
             path.append(e)
             if e.room_number == room_to.room_number:
                 return path
             else:
+                e.parent.add(room_from)
                 room = show_path(e, room_to, room_throgh=None)
                 if len(room) !=0 and room[-1].room_number == room_to.room_number:
                     path.append(room)

@@ -14,6 +14,9 @@ class Room:
         self.time[(self.room_number, room.room_number)] = time
         room.time[room.room_number, self.room_number] = time
 
+    def __repr__(self):
+        return 'Room {}'.format(self.room_number)
+
 
 def time_counter(room):
     if len(room.edge) == 0:
@@ -75,3 +78,4 @@ print(show_path(room1, room5))
 plot_tree(room1)
 nx.draw(G, with_labels=True, font_weight='bold')
 plt.show()
+

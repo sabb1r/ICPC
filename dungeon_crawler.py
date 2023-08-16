@@ -80,4 +80,3 @@ print(show_path(room1, room5))
 plot_tree(room1)
 nx.draw(G, with_labels=True, font_weight='bold')
 plt.show()
-

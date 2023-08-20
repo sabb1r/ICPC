@@ -10,6 +10,8 @@ class Room:
         self.parent = None
         self.child = set()
         self.cost = 0
+        self.max_cost = 0
+        self.min_cost = 0
 
     def add_link(self, room, time):
         self.edge.add(room)
@@ -20,6 +22,13 @@ class Room:
 
     def __repr__(self):
         return 'Room {}'.format(self.room_number)
+
+    def clear(self):
+        self.parent = None
+        self.child = set()
+        self.cost = 0
+        self.max_cost = 0
+        self.min_cost = 0
 
 
 def time_counter(room):
@@ -39,18 +48,39 @@ def time_counter(room):
 
 def set_root(root):
     for room in dungeon[1:]:
-        room.parent = None
-        room.child.clear()
-        room.cost = 0
+        room.clear()
 
     def order_tree(room):
+        t = []
+        if len(room.edge) == 1:
+            room.cost = 0
+
         for ch in room.edge:
             if ch == room.parent:
                 continue
             room.child.add(ch)
             ch.parent = room
-            ch.cost = ch.parent.cost + ch.time[(ch.room_number, ch.parent.room_number)]
             order_tree(ch)
+            t.append((ch.cost, ch))
+
+        test = [((2 * room.time[(room.room_number, x[1].room_number)] + x[1].max_cost), x[1]) for x in t]
+        test = sorted(test, key=lambda x: x[0])
+
+        room.max_cost = sum([x[0] for x in test])
+        if len(t) == 1:
+            room.min_cost = room.time[(room.room_number, t[0][1].room_number)] + t[0][1].min_cost
+        elif t:
+            test_smaller = test[:-1]
+            test_largest = test[-1]
+            if key_hole_different_branch:
+                if is_antecedent(test_largest[1], key_room):
+                    temp = test_largest
+                    test_largest = test_smaller.pop()
+                    test_smaller.append(temp)
+            cost_min = sum([x[0] for x in test_smaller]) + test_largest[1].min_cost + room.time[(room.room_number, test_largest[1].room_number)]
+            room.min_cost = cost_min
+        else:
+            room.min_cost = room.max_cost
 
     order_tree(root)
 
@@ -114,10 +144,15 @@ def is_antecedent(room1, room2):
         return False
 
 
+def location():
+    pass
+
+
 G = nx.Graph()
 dungeon, scenario = take_input()
 
 for ind, scene in enumerate(scenario):
+    key_hole_different_branch = False
     starting_room = dungeon[scene[0]]
     key_room = dungeon[scene[1]]
     trap_room = dungeon[scene[2]]
@@ -127,27 +162,19 @@ for ind, scene in enumerate(scenario):
 
     if is_antecedent(trap_room, key_room):
         print('Impossible')
+
+    elif is_antecedent(key_room, trap_room):
+        least_time = starting_room.min_cost
+        print(least_time)
+
     else:
-        print('Possible')
-    # elif is_antecedent(key_room, trap_room):
-    #     times = [(room, time_counter(room)) for room in starting_room.child]
-    #     times.sort(key=lambda x: x[1][0])
-    #     if len(times) == 1:
-    #         least_time = times[0][1][0]
-    #     else:
-    #         least_time = sum([t[1] for t in times[:-1]]) + times[-1][1]
-    #     # times.sort(key=lambda x:x[1])
-    #     # if len(times) == 1:
-    #     #     least_time = times[-1][1]
-    #     # else:
-    #     #     least_time = [x * 2 for x in times[:-1][1]] + times[-1][1]
-    #     print(least_time)
-    # else:
-    #     print('have to think how to solve')
+        key_hole_different_branch = True
+        set_root(starting_room)
+        least_time = starting_room.min_cost
+        print(least_time)
 
     # print(starting_room)
-    # for room in dungeon[1:]:
-    #     print(room, room.cost)
+    # print(starting_room.max_cost, starting_room.min_cost)
 
     # plot_tree(starting_room)
     # pos = nx.spring_layout(G, k=10)

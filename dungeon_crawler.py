@@ -6,30 +6,21 @@ import sys
 class Room:
     def __init__(self, room_number):
         self.room_number = room_number
-        self.edge = []
         self.time = {}
         self.parent = None
         self.child = []
         self.cost = 0
-        self.max_cost = 0
-        self.min_cost = 0
+        self.max_time = 0
+        self.min_time = 0
 
-    def add_link(self, room, time):
+    def add_child(self, room, time):
         self.child.append(room)
         room.parent = self
-        # room.time = time
         self.time[(self.room_number, room.room_number)] = time
         room.time[room.room_number, self.room_number] = time
 
     def __repr__(self):
         return 'Room {}'.format(self.room_number)
-
-    def clear(self):
-        self.parent = None
-        self.child.clear()
-        self.cost = 0
-        self.max_cost = 0
-        self.min_cost = 0
 
 
 def make_root(root, parent):
@@ -46,58 +37,40 @@ def make_root(root, parent):
 
 
 def set_root(root):
-    # for room in dungeon[1:]:
-    #     room.clear()
 
     def order_tree(room):
-        global faced_key_room, faced_trap_room, relative_position_detected
-        t = []
-
-        # if not relative_position_detected:
-        #     if room.room_number == key_room.room_number:
-        #         faced_key_room = True
-        #     if room.room_number == trap_room.room_number:
-        #         faced_trap_room = True
-        #
-        #     if faced_key_room and faced_trap_room:
-        #         relative_position()
+        time_list = []
 
         if len(room.child) == 0:
             room.cost = 0
 
-        for ch in room.child:
-            # if ch == room.parent:
-            #     continue
-            # room.child.append(ch)
-            # ch.parent = room
+        for child in room.child:
+            order_tree(child)
+            time_list.append((child, child.cost))
 
-            order_tree(ch)
-            t.append((ch.cost, ch))
+        max_time_list = [((2 * room.time[(room.room_number, x[0].room_number)] + x[0].max_time), x[0]) for x in time_list]
 
-        test = [((2 * room.time[(room.room_number, x[1].room_number)] + x[1].max_cost), x[1]) for x in t]
-        test = sorted(test, key=lambda x: x[0])
+        room.max_time = sum([x[1] for x in max_time_list])
 
-        room.max_cost = sum([x[0] for x in test])
+        if len(time_list) == 1:
+            room.min_time = room.time[(room.room_number, time_list[0][0].room_number)] + time_list[0][0].min_time
 
-        if len(t) == 1:
-            room.min_cost = room.time[(room.room_number, t[0][1].room_number)] + t[0][1].min_cost
-        elif t:
-            test_smaller = test[:-1]
-            test_largest = test[-1]
+        elif time_list:
+            min_time_list = []
+            for k in range(len(max_time_list)):
+                max_time_list_copied = max_time_list[:]
+                r, t = max_time_list_copied.pop(k)
+                sum_max_time = sum([x[1] for x in max_time_list_copied])
+                min_time = room.time[(room.room_number, r.room_number)] * r.min_time + sum_max_time
+                min_time_list.append((r, min_time))
+            min_time_list.sort(key=lambda x: x[1])
 
-            multiplier = 1
+            if key_hole_different_branch and is_antecedent(min_time_list[0][0], key_room) and not is_antecedent(
+                    min_time_list[0][0], trap_room):
+                #have to find out
 
-            if key_hole_different_branch and is_antecedent(test_largest[1], key_room) and not is_antecedent(
-                    test_largest[1], trap_room):
-                if not swap(test_smaller[-1], test_largest):
-                    multiplier = 3
-                else:
-                    temp = test_largest
-                    test_largest = test_smaller.pop()
-                    test_smaller.append(temp)
-            cost_min = sum([x[0] for x in test_smaller]) + test_largest[1].min_cost + multiplier * room.time[
-                (room.room_number, test_largest[1].room_number)]
-            room.min_cost = cost_min
+            room.min_cost = min_time_list[0][1]
+
         else:
             room.min_cost = room.max_cost
 
@@ -119,7 +92,7 @@ def take_input():
         dungeon = [None] + [Room(i) for i in range(1, total_room + 1)]
         for i in range(total_room - 1):
             room1, room2, time = list(map(int, file.readline().strip().split(' ')))
-            dungeon[room1].add_link(dungeon[room2], time)
+            dungeon[room1].add_child(dungeon[room2], time)
 
         scenario = []
         for i in range(total_scenario):
@@ -142,8 +115,15 @@ def is_antecedent(room1, room2):
                 return True
         return False
 
+def time_to_key_room(room):
+    if room.room_number == key_room.room_number:
+        return 0
+    return key_room.time[(key_room.room_number, key_room.parent.room_number)] + time_to_key_room()
+
+
 
 def swap(prev_room_info, key_holding_room_info):
+    # Have to edit
     prev_room = prev_room_info[1]
     key_holding_room = key_holding_room_info[1]
 

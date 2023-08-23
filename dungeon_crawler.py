@@ -1,4 +1,4 @@
-# import networkx as nx
+import networkx as nx
 import matplotlib.pyplot as plt
 import sys
 
@@ -140,9 +140,14 @@ def is_antecedent(room1, room2):
 
 
 def time_to_key_room(room):
-    if room.room_number == key_room.room_number:
-        return 0
-    return key_room.time[(key_room.room_number, key_room.parent.room_number)] + time_to_key_room()
+    def find_the_room(parent):
+        if parent.room_number == room.room_number:
+            return 0
+        return parent.time[(parent.room_number, parent.parent.room_number)] + find_the_room(parent.parent)
+
+    time = find_the_room(key_room)
+
+    return time
 
 
 def swap(prev_room_info, key_holding_room_info):
@@ -165,7 +170,6 @@ def swap(prev_room_info, key_holding_room_info):
 def relative_position():
     global key_hole_same_branch, key_hole_different_branch, trap_precedes_key
 
-
     if is_antecedent(trap_room, key_room):
         trap_precedes_key = True
     elif is_antecedent(key_room, trap_room):
@@ -174,7 +178,7 @@ def relative_position():
         key_hole_different_branch = True
 
 
-# G = nx.Graph()
+G = nx.Graph()
 dungeon, scenario = take_input()
 result = []
 
@@ -208,13 +212,15 @@ for ind, scene in enumerate(scenario):
     result.append(str(starting_room.min_time))
 
 
+
 for val in result:
     print(val)
 # write_output(result)
 
-# plot_tree(starting_room)
-# pos = nx.spring_layout(G, k=10)
-# nx.draw(G, pos, with_labels=True)
-# labels = nx.get_edge_attributes(G, 'weight')
-# nx.draw_networkx_edge_labels(G, pos, edge_labels=labels)
-# plt.show()
+plot_tree(starting_room)
+pos = nx.spring_layout(G, k=10)
+nx.draw(G, pos, with_labels=True)
+labels = nx.get_edge_attributes(G, 'weight')
+nx.draw_networkx_edge_labels(G, pos, edge_labels=labels)
+plt.show()
+print('Distance to get to the key room from room {} is = {}'.format(dungeon[4], time_to_key_room(dungeon[4])))

@@ -88,9 +88,9 @@ def set_root(root):
                 min_time_list.append((r, min_time))
             min_time_list.sort(key=lambda x: x[1])
 
-            # if key_hole_different_branch and is_antecedent(min_time_list[0][0], key_room) and not is_antecedent(
-            #         min_time_list[0][0], trap_room):
-            #     #have to find out
+            if key_hole_different_branch:
+                if is_antecedent(min_time_list[0][1], key_room):
+                    key_retrieve_first(room)
 
             room.min_time = min_time_list[0][1]
 
@@ -140,14 +140,17 @@ def is_antecedent(room1, room2):
 
 
 def time_to_key_room(room):
+    nodes = []
+
     def find_the_room(parent):
+        nodes.append(parent)
         if parent.room_number == room.room_number:
             return 0
         return parent.time[(parent.room_number, parent.parent.room_number)] + find_the_room(parent.parent)
 
     time = find_the_room(key_room)
 
-    return time
+    return time, nodes
 
 
 def swap(prev_room_info, key_holding_room_info):
@@ -176,6 +179,18 @@ def relative_position():
         key_hole_same_branch = True
     else:
         key_hole_different_branch = True
+
+
+def key_retrieve_first(room):
+    key_retrieval_time, nodes_to_reach_key = time_to_key_room(room)
+
+    leftover_branch = []
+    for node in nodes_to_reach_key:
+        children = node.child
+        for child in children:
+            if child in nodes_to_reach_key:
+                continue
+            leftover_branch.append((node, child))
 
 
 G = nx.Graph()
@@ -211,8 +226,6 @@ for ind, scene in enumerate(scenario):
     set_root(starting_room)
     result.append(str(starting_room.min_time))
 
-
-
 for val in result:
     print(val)
 # write_output(result)
@@ -223,4 +236,4 @@ nx.draw(G, pos, with_labels=True)
 labels = nx.get_edge_attributes(G, 'weight')
 nx.draw_networkx_edge_labels(G, pos, edge_labels=labels)
 plt.show()
-print('Distance to get to the key room from room {} is = {}'.format(dungeon[4], time_to_key_room(dungeon[4])))
+print('Distance to get to the key room from room {} is = {}'.format(dungeon[5], time_to_key_room(dungeon[5])))

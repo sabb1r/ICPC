@@ -107,8 +107,8 @@ def plot_tree(room):
 
 
 def take_input():
-    # with open(sys.argv[1], 'r') as file:
-    with open('dungeon_crawler_input.txt', 'r') as file:
+    with open(sys.argv[1], 'r') as file:
+    # with open('dungeon_crawler_input.txt', 'r') as file:
         total_room, total_scenario = list(map(int, file.readline().strip().split(' ')))
         dungeon = [None] + [Room(i) for i in range(1, total_room + 1)]
         for i in range(total_room - 1):
@@ -201,7 +201,6 @@ def min_time_node(key_time, nodes, first_room):
 def swappable(min_time_list, max_time_list, room):
     next_minimizable_room = min_time_list[-2][0]
 
-
     time_if_swap = room.max_time - min_time_list[-2][1]
 
     key_time, nodes = time_to_reach_room(min_time_list[-1][0], key_room)
@@ -210,19 +209,10 @@ def swappable(min_time_list, max_time_list, room):
 
     time_if_not_swap = min_time_node(key_time, nodes, room)
 
-    print(time_if_not_swap)
-
-    print(min_time_list[-1][0])
-
-    print(room.children)
-
-    final_list = [2 * room.time[(room.room_number, child.room_number)] + child.max_time for child in room.children if (child.room_number != min_time_list[-1][0])]
-
-    print(final_list)
+    final_list = [2 * room.time[(room.room_number, child.room_number)] + child.max_time for child in room.children if
+                  child.room_number != min_time_list[-1][0].room_number]
 
     time_if_not_swap += sum(final_list)
-
-    print(time_if_not_swap)
 
     if time_if_swap < time_if_not_swap:
         temp = min_time_list[-1]
@@ -268,9 +258,9 @@ for ind, scene in enumerate(scenario):
     calculate_time(starting_room)
     result.append(str(starting_room.min_time))
 
-for val in result:
-    print(val)
-# write_output(result)
+# for val in result:
+#     print(val)
+write_output(result)
 
 # plot_tree(starting_room)
 # pos = nx.spring_layout(G, k=10)

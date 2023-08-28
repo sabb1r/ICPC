@@ -16,12 +16,6 @@ class Room:
         self.max_time = 0
         self.min_time = 0
 
-    # def __eq__(self, other):
-    #     if self.room_number == other.room_number:
-    #         return True
-    #     else:
-    #         return False
-
     def add_link(self, room, time):
         self.link.add(room)
         room.link.add(self)
@@ -94,7 +88,7 @@ def calculate_time(room):
         if key_hole_different_branch:
             if is_antecedent(min_time_list[-1][0], key_room) and is_antecedent(room, trap_room) and not is_antecedent(
                     min_time_list[-1][0], trap_room):
-                swappable(min_time_list, room)
+                swappable(min_time_list, max_time_list, room)
 
         room.min_time = room.max_time - min_time_list[-1][1]
         room.end_room = min_time_list[-1][0]
@@ -113,8 +107,8 @@ def plot_tree(room):
 
 
 def take_input():
-    with open(sys.argv[1], 'r') as file:
-    # with open('dungeon_crawler_input.txt', 'r') as file:
+    # with open(sys.argv[1], 'r') as file:
+    with open('dungeon_crawler_input.txt', 'r') as file:
         total_room, total_scenario = list(map(int, file.readline().strip().split(' ')))
         dungeon = [None] + [Room(i) for i in range(1, total_room + 1)]
         for i in range(total_room - 1):
@@ -179,23 +173,34 @@ def min_time_node(key_time, nodes, first_room):
             branches.append([node, child])
             costs.append([node, 2 * node.time[(node.room_number, child.room_number)] + child.max_time])
 
+    if not branches:
+        print('gotcha')
+        return 3 * key_time + key_room.min_time
+
+    # print(branches)
     # print(costs)
 
     tmax = sum([x[1] for x in costs]) + 2 * key_time + key_room.max_time
 
+    # print(tmax)
+
     flag = 100000000000000000
 
     for ind, branch in enumerate(branches):
-        time_to_reach = time_to_reach_room(nodes[0], branch[1])[0]
+        # time_to_reach = time_to_reach_room(nodes[0], branch[1])[0]
         t = tmax - costs[ind][1] + time_to_reach_room(first_room, branch[1])[0] + branch[1].min_time
+        # print(branch, t)
         if t < flag:
             flag = t
+
+    # print(flag)
 
     return flag
 
 
-def swappable(min_time_list, room):
+def swappable(min_time_list, max_time_list, room):
     next_minimizable_room = min_time_list[-2][0]
+
 
     time_if_swap = room.max_time - min_time_list[-2][1]
 
@@ -205,18 +210,25 @@ def swappable(min_time_list, room):
 
     time_if_not_swap = min_time_node(key_time, nodes, room)
 
-    # print(next_minimizable_room)
-
-    time_if_not_swap += 2 * next_minimizable_room.time[
-        (next_minimizable_room.room_number, next_minimizable_room.parent.room_number)] + next_minimizable_room.max_time
-
     print(time_if_not_swap)
 
+    print(min_time_list[-1][0])
+
+    print(room.children)
+
+    final_list = [2 * room.time[(room.room_number, child.room_number)] + child.max_time for child in room.children if (child.room_number != min_time_list[-1][0])]
+
+    print(final_list)
+
+    time_if_not_swap += sum(final_list)
+
+    print(time_if_not_swap)
 
     if time_if_swap < time_if_not_swap:
         temp = min_time_list[-1]
         min_time_list[-1] = min_time_list[-2]
         min_time_list[-2] = temp
+
 
     else:
         val = room.max_time - time_if_not_swap
@@ -256,9 +268,9 @@ for ind, scene in enumerate(scenario):
     calculate_time(starting_room)
     result.append(str(starting_room.min_time))
 
-# for val in result:
-#     print(val)
-write_output(result)
+for val in result:
+    print(val)
+# write_output(result)
 
 # plot_tree(starting_room)
 # pos = nx.spring_layout(G, k=10)

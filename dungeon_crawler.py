@@ -87,18 +87,13 @@ def calculate_time(room):
     elif time_list:
         min_time_list = []
         for rm in max_time_list:
-            # max_time_list_copied = max_time_list[:]
-            # r, t = max_time_list_copied.pop(k)
-            # sum_max_time = sum([x[1] for x in max_time_list_copied])
-            # min_time = room.time[(room.room_number, r.room_number)] + r.min_time + sum_max_time
-            # min_time_list.append((r, min_time))
             val = room.time[(room.room_number, rm[0].room_number)] + rm[0].max_time - rm[0].min_time
-            min_time_list.append((rm[0], val))
+            min_time_list.append([rm[0], val])
         min_time_list.sort(key=lambda x: x[1])
 
         if key_hole_different_branch:
-            if is_antecedent(min_time_list[0][0], key_room) and is_antecedent(room, trap_room) and not is_antecedent(
-                    min_time_list[0][0], trap_room):
+            if is_antecedent(min_time_list[-1][0], key_room) and is_antecedent(room, trap_room) and not is_antecedent(
+                    min_time_list[-1][0], trap_room):
                 swappable(min_time_list, room)
 
         room.min_time = room.max_time - min_time_list[-1][1]
@@ -118,8 +113,8 @@ def plot_tree(room):
 
 
 def take_input():
-    # with open(sys.argv[1], 'r') as file:
-    with open('dungeon_crawler_input.txt', 'r') as file:
+    with open(sys.argv[1], 'r') as file:
+    # with open('dungeon_crawler_input.txt', 'r') as file:
         total_room, total_scenario = list(map(int, file.readline().strip().split(' ')))
         dungeon = [None] + [Room(i) for i in range(1, total_room + 1)]
         for i in range(total_room - 1):
@@ -158,6 +153,7 @@ def time_to_reach_room(from_room, to_room):
         return parent.time[(parent.room_number, parent.parent.room_number)] + find_the_room(parent.parent)
 
     time = find_the_room(to_room)
+    nodes = nodes[::-1]
 
     return time, nodes
 
@@ -173,53 +169,58 @@ def relative_position():
         key_hole_different_branch = True
 
 
-def swappable(min_time_list, room):
-    time_if_swap = min_time_list[-1][1]
-
-    key_time, nodes = time_to_reach_room(room, key_room)
+def min_time_node(key_time, nodes, first_room):
     branches = []
-
-    tmax = 0
-    for node in nodes:
-        time_to_node = time_to_reach_room(room, node)
-        branch = []
+    costs = []
+    for node in nodes[:-1]:
         for child in node.children:
             if child in nodes:
                 continue
-            t = 2 * node.time[(node.room_number, child.room_number)] + child.max_time
-            tmax += t
-            branch.append(child)
-        branches.append([node, branch])
+            branches.append([node, child])
+            costs.append([node, 2 * node.time[(node.room_number, child.room_number)] + child.max_time])
+
+    # print(costs)
+
+    tmax = sum([x[1] for x in costs]) + 2 * key_time + key_room.max_time
+
+    flag = 100000000000000000
+
+    for ind, branch in enumerate(branches):
+        time_to_reach = time_to_reach_room(nodes[0], branch[1])[0]
+        t = tmax - costs[ind][1] + time_to_reach_room(first_room, branch[1])[0] + branch[1].min_time
+        if t < flag:
+            flag = t
+
+    return flag
 
 
+def swappable(min_time_list, room):
+    next_minimizable_room = min_time_list[-2][0]
 
-    for i in range(len(branches)):
-        for ind, sub_branch in enumerate(branches[i][1]):
-            maximum_time = 2 * branch[0].time[(branch[0].room_number, sub_branch.room_number)] + sub_branch.max_time
-            branches[i][1][ind] = maximum_time
+    time_if_swap = room.max_time - min_time_list[-2][1]
 
-    mod_branches = [[x[0], sum(x[1])] for x in branches]
-    mod_branches.sort(key=lambda x: x[1])
+    key_time, nodes = time_to_reach_room(min_time_list[-1][0], key_room)
 
-    # def get_key(room):
-    #     # nonlocal time_to_get_key
-    #     if not is_antecedent(room.end_room, key_room) or room.room_number == key_room.room_number:
-    #         return room.min_time
-    #         # return room.max_time
-    #     return 2 * room.time[(room.room_number, room.end_room.room_number)] + get_key(room.end_room)
-    #
-    # time_to_get_key = 2 * room.time[(room.room_number, min_time_list[0][0].room_number)] + get_key(min_time_list[0][0])
-    # # time_to_get_key = 2 * room.time[(room.room_number, min_time_list[0][0].room_number)] + get_key(min_time_list[0][0])
-    #
-    # # time_if_not_swap = time_to_get_key + min_time_list[0][1] - (room.time[(room.room_number, min_time_list[0][0].room_number)] + min_time_list[0][0].min_time)
-    # time_if_not_swap = room.min_time + time_to_get_key + min_time_list[0][1]
+    key_time += nodes[0].time[(nodes[0].room_number, nodes[0].parent.room_number)]
 
-    # if time_if_swap < time_if_not_swap:
-    #     temp = min_time_list[0]
-    #     min_time_list[0] = min_time_list[1]
-    #     min_time_list[1] = temp
-    # else:
-    #     min_time_list[0] = (min_time_list[0][0], time_if_not_swap)
+    time_if_not_swap = min_time_node(key_time, nodes, room)
+
+    # print(next_minimizable_room)
+
+    time_if_not_swap += 2 * next_minimizable_room.time[
+        (next_minimizable_room.room_number, next_minimizable_room.parent.room_number)] + next_minimizable_room.max_time
+
+    print(time_if_not_swap)
+
+
+    if time_if_swap < time_if_not_swap:
+        temp = min_time_list[-1]
+        min_time_list[-1] = min_time_list[-2]
+        min_time_list[-2] = temp
+
+    else:
+        val = room.max_time - time_if_not_swap
+        min_time_list[-1][1] = val
 
 
 # G = nx.Graph()
@@ -248,16 +249,16 @@ for ind, scene in enumerate(scenario):
         result.append('impossible')
         continue
 
-    if key_hole_different_branch:
-        result.append('have to improvised')
-        continue
+    # if key_hole_different_branch:
+    #     result.append('have to improvised')
+    #     continue
 
     calculate_time(starting_room)
     result.append(str(starting_room.min_time))
 
-for val in result:
-    print(val)
-# write_output(result)
+# for val in result:
+#     print(val)
+write_output(result)
 
 # plot_tree(starting_room)
 # pos = nx.spring_layout(G, k=10)

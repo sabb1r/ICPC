@@ -31,17 +31,25 @@ class Room:
 
 
 def make_root(root, parent):
-    if not root:
-        return
-    else:
-        temp = root.parent
-        root.parent = parent
-        if temp:
-            root.children.append(temp)
-        if parent:
-            root.children.remove(parent)
+    previous_parent = []
 
-    make_root(temp, root)
+    def root_setup(root, parent):
+
+        if not root:
+            return
+        else:
+            temp = root.parent
+            root.parent = parent
+            if temp:
+                root.children.append(temp)
+                previous_parent.append(temp)
+            if parent:
+                root.children.remove(parent)
+
+        root_setup(temp, root)
+
+    root_setup(root, parent)
+    return previous_parent
 
 
 def initial_root_setup(root):
@@ -62,14 +70,27 @@ def initial_root_setup(root):
 
 
 def calculate_time(room):
+    global previous_parent, same_as_before
     time_list = []
 
     if len(room.children) == 0:
         room.cost = 0
 
+    # for child in room.children:
+    #     calculate_time(child)
+    #     time_list.append((child, child.cost))
+
     for child in room.children:
-        calculate_time(child)
-        time_list.append((child, child.cost))
+        if not same_as_before:
+            if child in previous_parent:
+                time_list.append((child, child.max_time))
+                continue
+            else:
+                calculate_time(child)
+                time_list.append((child, child.cost))
+        else:
+            calculate_time(child)
+            time_list.append((child, child.cost))
 
     max_time_list = [(x[0], 2 * room.time[(room, x[0])] + x[0].max_time) for x in time_list]
 
@@ -101,7 +122,7 @@ def calculate_time(room):
 
 def take_input():
     with open(sys.argv[1], 'r') as file:
-        # with open('dungeon_crawler_input.txt', 'r') as file:
+    # with open('dungeon_crawler_input.txt', 'r') as file:
         total_room, total_scenario = list(map(int, file.readline().strip().split(' ')))
         dungeon = [None] + [Room(i) for i in range(1, total_room + 1)]
         for i in range(total_room - 1):
@@ -182,7 +203,6 @@ def min_time_node(key_time, nodes, first_room):
 
 
 def swappable(min_time_list, room):
-
     time_if_swap = room.max_time - min_time_list[-2][1]
 
     key_time, nodes = time_to_reach_room(min_time_list[-1][0], key_room)
@@ -201,22 +221,19 @@ def swappable(min_time_list, room):
         min_time_list[-1] = min_time_list[-2]
         min_time_list[-2] = temp
 
-
     else:
         val = room.max_time - time_if_not_swap
         min_time_list[-1][1] = val
 
 
-# G = nx.Graph()
 dungeon, scenario = take_input()
 result = []
 
 for ind, scene in enumerate(scenario):
-    relative_position_detected = False
     key_hole_different_branch = False
     key_hole_same_branch = False
     trap_precedes_key = False
-    same_as_before = False
+    same_as_before = True
 
     starting_room = dungeon[scene[0]]
     key_room = dungeon[scene[1]]
@@ -226,14 +243,15 @@ for ind, scene in enumerate(scenario):
         if not starting_room.parent and not starting_room.children:
             initial_root_setup(starting_room)
         else:
-            make_root(starting_room, None)
+            if result[-1] != 'impossible':
+                same_as_before = True
+            previous_parent = make_root(starting_room, None)
 
     relative_position()
 
     if trap_precedes_key:
         result.append('impossible')
         continue
-
 
     calculate_time(starting_room)
     result.append(str(starting_room.min_time))

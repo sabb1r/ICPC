@@ -1,7 +1,9 @@
 # import networkx as nx
 # import matplotlib.pyplot as plt
 import sys
+import time
 
+start_time = time.time()
 sys.setrecursionlimit(10000)
 
 
@@ -19,8 +21,8 @@ class Room:
     def add_link(self, room, time):
         self.link.add(room)
         room.link.add(self)
-        self.time[(self.room_number, room.room_number)] = time
-        room.time[room.room_number, self.room_number] = time
+        self.time[(self, room)] = time
+        room.time[(room, self)] = time
 
     def add_child(self, room):
         self.children.append(room)
@@ -70,18 +72,18 @@ def calculate_time(room):
         calculate_time(child)
         time_list.append((child, child.cost))
 
-    max_time_list = [(x[0], 2 * room.time[(room.room_number, x[0].room_number)] + x[0].max_time) for x in time_list]
+    max_time_list = [(x[0], 2 * room.time[(room, x[0])] + x[0].max_time) for x in time_list]
 
     room.max_time = sum([x[1] for x in max_time_list])
 
     if len(time_list) == 1:
-        room.min_time = room.time[(room.room_number, time_list[0][0].room_number)] + time_list[0][0].min_time
+        room.min_time = room.time[(room, time_list[0][0])] + time_list[0][0].min_time
         room.end_room = time_list[0][0]
 
     elif time_list:
         min_time_list = []
         for rm in max_time_list:
-            val = room.time[(room.room_number, rm[0].room_number)] + rm[0].max_time - rm[0].min_time
+            val = room.time[(room, rm[0])] + rm[0].max_time - rm[0].min_time
             min_time_list.append([rm[0], val])
         min_time_list.sort(key=lambda x: x[1])
 
@@ -98,12 +100,12 @@ def calculate_time(room):
         room.end_room = room
 
 
-def plot_tree(room):
-    global G
-    G.add_node(room.room_number)
-    for ch in room.children:
-        G.add_edge(room.room_number, ch.room_number, weight=room.time[(room.room_number, ch.room_number)])
-        plot_tree(ch)
+# def plot_tree(room):
+#     global G
+#     G.add_node(room.room_number)
+#     for ch in room.children:
+#         G.add_edge(room.room_number, ch.room_number, weight=room.time[(room.room_number, ch.room_number)])
+#         plot_tree(ch)
 
 
 def take_input():
@@ -144,7 +146,7 @@ def time_to_reach_room(from_room, to_room):
         nodes.append(parent)
         if parent.room_number == from_room.room_number:
             return 0
-        return parent.time[(parent.room_number, parent.parent.room_number)] + find_the_room(parent.parent)
+        return parent.time[(parent, parent.parent)] + find_the_room(parent.parent)
 
     time = find_the_room(to_room)
     nodes = nodes[::-1]
@@ -171,10 +173,9 @@ def min_time_node(key_time, nodes, first_room):
             if child in nodes:
                 continue
             branches.append([node, child])
-            costs.append([node, 2 * node.time[(node.room_number, child.room_number)] + child.max_time])
+            costs.append([node, 2 * node.time[(node, child)] + child.max_time])
 
     if not branches:
-        print('gotcha')
         return 3 * key_time + key_room.min_time
 
     # print(branches)
@@ -205,11 +206,11 @@ def swappable(min_time_list, max_time_list, room):
 
     key_time, nodes = time_to_reach_room(min_time_list[-1][0], key_room)
 
-    key_time += nodes[0].time[(nodes[0].room_number, nodes[0].parent.room_number)]
+    key_time += nodes[0].time[(nodes[0], nodes[0].parent)]
 
     time_if_not_swap = min_time_node(key_time, nodes, room)
 
-    final_list = [2 * room.time[(room.room_number, child.room_number)] + child.max_time for child in room.children if
+    final_list = [2 * room.time[(room, child)] + child.max_time for child in room.children if
                   child.room_number != min_time_list[-1][0].room_number]
 
     time_if_not_swap += sum(final_list)
@@ -234,6 +235,7 @@ for ind, scene in enumerate(scenario):
     key_hole_different_branch = False
     key_hole_same_branch = False
     trap_precedes_key = False
+    same_as_before = False
 
     starting_room = dungeon[scene[0]]
     key_room = dungeon[scene[1]]
@@ -260,6 +262,7 @@ for ind, scene in enumerate(scenario):
 
 # for val in result:
 #     print(val)
+print('Time Required: ', time.time() - start_time)
 write_output(result)
 
 # plot_tree(starting_room)
